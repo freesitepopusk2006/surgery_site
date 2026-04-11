@@ -42,10 +42,13 @@
 
 html {
     scroll-behavior: smooth;
+    margin: 0;
+    padding: 0;
 }
 
 body {
     margin: 0;
+    padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI",
         Roboto, Helvetica, Arial, sans-serif;
     color: var(--text);
@@ -75,16 +78,25 @@ select {
 .site-bg {
     min-height: 100vh;
     padding: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .page-content {
     width: 100%;
-    padding: clamp(12px, 2vw, 28px);
+    padding: 0;
+    flex: 1;
 }
 
 .hero-shell {
+    width: 100%;
+    margin: 0;
+}
+
+.main-squircle-wrap {
     width: min(100%, var(--container));
     margin: 0 auto;
+    padding: 0 clamp(12px, 2vw, 24px) clamp(24px, 4vw, 48px);
 }
 
 .main-squircle {

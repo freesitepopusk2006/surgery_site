@@ -5,250 +5,251 @@
 {% block content %}
 <section class="hero-shell">
 
-    <div class="hero-bg">
+    <div class="hero-bg-full" aria-hidden="true">
         {% if homepage and homepage.hero_background %}
-            <img src="{{ homepage.hero_background.url }}" alt="Фон первого экрана" loading="eager">
+            <img src="{{ homepage.hero_background.url }}" alt="" loading="eager">
         {% endif %}
-
-        <div class="hero-overlay">
-            <div class="hero-overlay-content">
-                <span class="section-kicker">Раздел</span>
-                <h1>
-                    {% if homepage and homepage.help_title %}
-                        {{ homepage.help_title }}
-                    {% else %}
-                        С чем я могу помочь
-                    {% endif %}
-                </h1>
-
-                <p>
-                    {% if homepage and homepage.help_description %}
-                        {{ homepage.help_description|linebreaksbr }}
-                    {% else %}
-                        Здесь будет краткое описание направлений помощи. Пока ставим заглушку, позже
-                        подключим редактирование через админку.
-                    {% endif %}
-                </p>
-            </div>
-        </div>
     </div>
 
-    <div class="main-squircle">
+    <div class="main-squircle-wrap">
+        <div class="main-squircle">
 
-        <section class="section section-about" id="about">
-            <div class="section-heading">
-                <span class="section-kicker">Обо мне</span>
-                <h2>
-                    {% if homepage and homepage.about_title %}
-                        {{ homepage.about_title }}
-                    {% else %}
-                        Профессиональный подход и современная хирургия
-                    {% endif %}
-                </h2>
-            </div>
-
-            <div class="about-grid">
-                <div class="about-photo placeholder-block">
-                    {% if homepage and homepage.about_photo %}
-                        <img src="{{ homepage.about_photo.url }}" alt="Фото врача" loading="lazy">
-                    {% else %}
-                        <span>Фото врача</span>
-                    {% endif %}
-                </div>
-
-                <div class="about-text">
-                    <p>
-                        {% if homepage and homepage.about_text %}
-                            {{ homepage.about_text|linebreaksbr }}
+            <section class="section section-help" id="help">
+                <div class="section-heading">
+                    <span class="section-kicker">Раздел</span>
+                    <h1>
+                        {% if homepage and homepage.help_title %}
+                            {{ homepage.help_title }}
                         {% else %}
-                            Здесь будет блок с фотографией слева и текстом справа. Позже заменим этот текст
-                            на данные из админки.
+                            С чем я могу помочь
+                        {% endif %}
+                    </h1>
+                    <p>
+                        {% if homepage and homepage.help_description %}
+                            {{ homepage.help_description|linebreaksbr }}
+                        {% else %}
+                            Здесь будет краткое описание направлений помощи. Пока ставим заглушку, позже
+                            подключим редактирование через админку.
                         {% endif %}
                     </p>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section class="section section-cases" id="cases">
-            <div class="section-heading">
-                <span class="section-kicker">Кейсы</span>
-                <h2>
-                    {% if homepage and homepage.cases_title %}
-                        {{ homepage.cases_title }}
-                    {% else %}
-                        Примеры работ
-                    {% endif %}
-                </h2>
-                <p>
-                    {% if homepage and homepage.cases_description %}
-                        {{ homepage.cases_description|linebreaksbr }}
-                    {% else %}
-                        Ниже будут 5 карточек с изображением, описанием и кнопкой «Читать подробнее».
-                    {% endif %}
-                </p>
-            </div>
+            <section class="section section-about" id="about">
+                <div class="section-heading">
+                    <span class="section-kicker">Обо мне</span>
+                    <h2>
+                        {% if homepage and homepage.about_title %}
+                            {{ homepage.about_title }}
+                        {% else %}
+                            Профессиональный подход и современная хирургия
+                        {% endif %}
+                    </h2>
+                </div>
 
-            <div class="cases-grid">
-                {% if cases %}
-                    {% for case_item in cases %}
-                        <article class="case-card">
-                            <div class="case-image placeholder-block">
-                                {% if case_item.image %}
-                                    <img src="{{ case_item.image.url }}" alt="{{ case_item.title }}" loading="lazy">
-                                {% else %}
+                <div class="about-grid">
+                    <div class="about-photo placeholder-block">
+                        {% if homepage and homepage.about_photo %}
+                            <img src="{{ homepage.about_photo.url }}" alt="Фото врача" loading="lazy">
+                        {% else %}
+                            <span>Фото врача</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="about-text">
+                        <p>
+                            {% if homepage and homepage.about_text %}
+                                {{ homepage.about_text|linebreaksbr }}
+                            {% else %}
+                                Здесь будет блок с фотографией слева и текстом справа. Позже заменим этот текст
+                                на данные из админки.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section section-cases" id="cases">
+                <div class="section-heading">
+                    <span class="section-kicker">Кейсы</span>
+                    <h2>
+                        {% if homepage and homepage.cases_title %}
+                            {{ homepage.cases_title }}
+                        {% else %}
+                            Примеры работ
+                        {% endif %}
+                    </h2>
+                    <p>
+                        {% if homepage and homepage.cases_description %}
+                            {{ homepage.cases_description|linebreaksbr }}
+                        {% else %}
+                            Ниже будут 5 карточек с изображением, описанием и кнопкой «Читать подробнее».
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="cases-grid">
+                    {% if cases %}
+                        {% for case_item in cases %}
+                            <article class="case-card">
+                                <div class="case-image placeholder-block">
+                                    {% if case_item.image %}
+                                        <img src="{{ case_item.image.url }}" alt="{{ case_item.title }}" loading="lazy">
+                                    {% else %}
+                                        <span>Фото кейса</span>
+                                    {% endif %}
+                                </div>
+                                <div class="case-content">
+                                    <h3>{{ case_item.title }}</h3>
+                                    <p>{{ case_item.short_description }}</p>
+                                    <a href="{% if case_item.detail_url %}{{ case_item.detail_url }}{% else %}#{% endif %}" class="btn btn-dark">
+                                        Читать подробнее
+                                    </a>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    {% else %}
+                        {% for i in "12345" %}
+                            <article class="case-card">
+                                <div class="case-image placeholder-block">
                                     <span>Фото кейса</span>
-                                {% endif %}
-                            </div>
-                            <div class="case-content">
-                                <h3>{{ case_item.title }}</h3>
-                                <p>{{ case_item.short_description }}</p>
-                                <a href="{% if case_item.detail_url %}{{ case_item.detail_url }}{% else %}#{% endif %}" class="btn btn-dark">
-                                    Читать подробнее
-                                </a>
-                            </div>
-                        </article>
-                    {% endfor %}
-                {% else %}
-                    {% for i in "12345" %}
-                        <article class="case-card">
-                            <div class="case-image placeholder-block">
-                                <span>Фото кейса</span>
-                            </div>
-                            <div class="case-content">
-                                <h3>Название кейса</h3>
-                                <p>Краткое описание результата или клинической ситуации.</p>
-                                <a href="#" class="btn btn-dark">Читать подробнее</a>
-                            </div>
-                        </article>
-                    {% endfor %}
-                {% endif %}
-            </div>
-        </section>
-
-        <section class="section section-clinic" id="clinic">
-            <div class="section-heading">
-                <span class="section-kicker">Клиника</span>
-                <h2>
-                    {% if homepage and homepage.clinic_title %}
-                        {{ homepage.clinic_title }}
-                    {% else %}
-                        Где проходит приём
+                                </div>
+                                <div class="case-content">
+                                    <h3>Название кейса</h3>
+                                    <p>Краткое описание результата или клинической ситуации.</p>
+                                    <a href="#" class="btn btn-dark">Читать подробнее</a>
+                                </div>
+                            </article>
+                        {% endfor %}
                     {% endif %}
-                </h2>
-            </div>
+                </div>
+            </section>
 
-            <div class="section-body">
-                <p>
-                    {% if homepage and homepage.clinic_description %}
-                        {{ homepage.clinic_description|linebreaksbr }}
+            <section class="section section-clinic" id="clinic">
+                <div class="section-heading">
+                    <span class="section-kicker">Клиника</span>
+                    <h2>
+                        {% if homepage and homepage.clinic_title %}
+                            {{ homepage.clinic_title }}
+                        {% else %}
+                            Где проходит приём
+                        {% endif %}
+                    </h2>
+                </div>
+
+                <div class="section-body">
+                    <p>
+                        {% if homepage and homepage.clinic_description %}
+                            {{ homepage.clinic_description|linebreaksbr }}
+                        {% else %}
+                            Здесь будет информация о клинике и позже подключим карту.
+                        {% endif %}
+                    </p>
+
+                    {% if homepage and homepage.clinic_map_embed %}
+                        <div class="map-placeholder">
+                            {{ homepage.clinic_map_embed|safe }}
+                        </div>
                     {% else %}
-                        Здесь будет информация о клинике и позже подключим карту.
+                        <div class="map-placeholder placeholder-block">
+                            <span>Здесь будет карта</span>
+                        </div>
                     {% endif %}
-                </p>
+                </div>
+            </section>
 
-                {% if homepage and homepage.clinic_map_embed %}
-                    <div class="map-placeholder">
-                        {{ homepage.clinic_map_embed|safe }}
-                    </div>
-                {% else %}
-                    <div class="map-placeholder placeholder-block">
-                        <span>Здесь будет карта</span>
-                    </div>
-                {% endif %}
-            </div>
-        </section>
+            <section class="section section-prices" id="prices">
+                <div class="section-heading">
+                    <span class="section-kicker">Стоимость</span>
+                    <h2>
+                        {% if homepage and homepage.prices_title %}
+                            {{ homepage.prices_title }}
+                        {% else %}
+                            Услуги и цены
+                        {% endif %}
+                    </h2>
+                </div>
 
-        <section class="section section-prices" id="prices">
-            <div class="section-heading">
-                <span class="section-kicker">Стоимость</span>
-                <h2>
-                    {% if homepage and homepage.prices_title %}
-                        {{ homepage.prices_title }}
+                <div class="prices-list">
+                    {% if price_items %}
+                        {% for item in price_items %}
+                            <details class="price-item" {% if forloop.first %}open{% endif %}>
+                                <summary>
+                                    {{ item.title }}
+                                    {% if item.price_text %}
+                                        <span>{{ item.price_text }}</span>
+                                    {% endif %}
+                                </summary>
+                                <div class="price-body">
+                                    {{ item.description|linebreaksbr }}
+                                </div>
+                            </details>
+                        {% endfor %}
                     {% else %}
-                        Услуги и цены
-                    {% endif %}
-                </h2>
-            </div>
-
-            <div class="prices-list">
-                {% if price_items %}
-                    {% for item in price_items %}
-                        <details class="price-item" {% if forloop.first %}open{% endif %}>
-                            <summary>
-                                {{ item.title }}
-                                {% if item.price_text %}
-                                    <span>{{ item.price_text }}</span>
-                                {% endif %}
-                            </summary>
+                        <details class="price-item" open>
+                            <summary>Консультация</summary>
                             <div class="price-body">
-                                {{ item.description|linebreaksbr }}
+                                Описание услуги и ориентировочная стоимость. Позже заменим на данные из модели.
                             </div>
                         </details>
-                    {% endfor %}
-                {% else %}
-                    <details class="price-item" open>
-                        <summary>Консультация</summary>
-                        <div class="price-body">
-                            Описание услуги и ориентировочная стоимость. Позже заменим на данные из модели.
-                        </div>
-                    </details>
 
-                    <details class="price-item">
-                        <summary>Диагностика</summary>
-                        <div class="price-body">
-                            Описание услуги и ориентировочная стоимость. Позже заменим на данные из модели.
-                        </div>
-                    </details>
+                        <details class="price-item">
+                            <summary>Диагностика</summary>
+                            <div class="price-body">
+                                Описание услуги и ориентировочная стоимость. Позже заменим на данные из модели.
+                            </div>
+                        </details>
 
-                    <details class="price-item">
-                        <summary>Оперативное лечение</summary>
-                        <div class="price-body">
-                            Описание услуги и ориентировочная стоимость. Позже заменим на данные из модели.
-                        </div>
-                    </details>
-                {% endif %}
-            </div>
-        </section>
-
-        <section class="section section-reviews" id="reviews">
-            <div class="section-heading">
-                <span class="section-kicker">Отзывы</span>
-                <h2>
-                    {% if homepage and homepage.reviews_title %}
-                        {{ homepage.reviews_title }}
-                    {% else %}
-                        Что говорят пациенты
+                        <details class="price-item">
+                            <summary>Оперативное лечение</summary>
+                            <div class="price-body">
+                                Описание услуги и ориентировочная стоимость. Позже заменим на данные из модели.
+                            </div>
+                        </details>
                     {% endif %}
-                </h2>
-            </div>
+                </div>
+            </section>
 
-            <div class="reviews-grid">
-                {% if reviews %}
-                    {% for review in reviews %}
+            <section class="section section-reviews" id="reviews">
+                <div class="section-heading">
+                    <span class="section-kicker">Отзывы</span>
+                    <h2>
+                        {% if homepage and homepage.reviews_title %}
+                            {{ homepage.reviews_title }}
+                        {% else %}
+                            Что говорят пациенты
+                        {% endif %}
+                    </h2>
+                </div>
+
+                <div class="reviews-grid">
+                    {% if reviews %}
+                        {% for review in reviews %}
+                            <article class="review-card">
+                                <p>“{{ review.text }}”</p>
+                                <span>{{ review.patient_name }}</span>
+                            </article>
+                        {% endfor %}
+                    {% else %}
                         <article class="review-card">
-                            <p>“{{ review.text }}”</p>
-                            <span>{{ review.patient_name }}</span>
+                            <p>“Здесь будет первый отзыв пациента.”</p>
+                            <span>Имя пациента</span>
                         </article>
-                    {% endfor %}
-                {% else %}
-                    <article class="review-card">
-                        <p>“Здесь будет первый отзыв пациента.”</p>
-                        <span>Имя пациента</span>
-                    </article>
 
-                    <article class="review-card">
-                        <p>“Здесь будет второй отзыв пациента.”</p>
-                        <span>Имя пациента</span>
-                    </article>
+                        <article class="review-card">
+                            <p>“Здесь будет второй отзыв пациента.”</p>
+                            <span>Имя пациента</span>
+                        </article>
 
-                    <article class="review-card">
-                        <p>“Здесь будет третий отзыв пациента.”</p>
-                        <span>Имя пациента</span>
-                    </article>
-                {% endif %}
-            </div>
-        </section>
+                        <article class="review-card">
+                            <p>“Здесь будет третий отзыв пациента.”</p>
+                            <span>Имя пациента</span>
+                        </article>
+                    {% endif %}
+                </div>
+            </section>
 
+        </div>
     </div>
 </section>
 {% endblock %}

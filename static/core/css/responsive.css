@@ -20,64 +20,6 @@
 }
 
 @media (max-width: 860px) {
-    .site-bg {
-        padding: 10px;
-    }
-
-    .main-squircle {
-        padding: 22px 18px;
-        border-radius: 28px;
-    }
-
-    .section {
-        padding: 28px 0;
-    }
-
-    .about-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .about-photo {
-        min-height: 360px;
-    }
-
-    .cases-grid,
-    .reviews-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .footer-main {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-}
-
-@media (max-width: 1180px) {
-    .header-inner {
-        grid-template-columns: 1fr;
-        justify-items: center;
-        text-align: center;
-        gap: 14px;
-    }
-
-    .header-actions {
-        justify-content: center;
-    }
-
-    .cases-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .reviews-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 860px) {
-    .site-bg {
-        padding: 10px;
-    }
-
     .main-squircle {
         padding: 22px 18px;
         border-radius: 28px;
