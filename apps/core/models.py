@@ -60,7 +60,7 @@ class SiteSettings(models.Model):
 
 class HomePage(models.Model):
     hero_background = models.ImageField(
-        upload_to='home/backgrounds/',
+        upload_to='homepage/',
         blank=True,
         null=True,
         verbose_name='Фоновое изображение страницы'

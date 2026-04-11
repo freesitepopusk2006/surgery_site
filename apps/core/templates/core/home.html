@@ -4,10 +4,14 @@
 
 {% block content %}
 <section class="hero-shell">
-    <div class="main-squircle">
 
-        <section class="section section-help" id="help">
-            <div class="section-heading">
+    <div class="hero-bg">
+        {% if homepage and homepage.hero_background %}
+            <img src="{{ homepage.hero_background.url }}" alt="Фон первого экрана" loading="eager">
+        {% endif %}
+
+        <div class="hero-overlay">
+            <div class="hero-overlay-content">
                 <span class="section-kicker">Раздел</span>
                 <h1>
                     {% if homepage and homepage.help_title %}
@@ -16,8 +20,7 @@
                         С чем я могу помочь
                     {% endif %}
                 </h1>
-            </div>
-            <div class="section-body">
+
                 <p>
                     {% if homepage and homepage.help_description %}
                         {{ homepage.help_description|linebreaksbr }}
@@ -27,7 +30,10 @@
                     {% endif %}
                 </p>
             </div>
-        </section>
+        </div>
+    </div>
+
+    <div class="main-squircle">
 
         <section class="section section-about" id="about">
             <div class="section-heading">

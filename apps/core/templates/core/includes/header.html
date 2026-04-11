@@ -1,6 +1,6 @@
 <header class="site-header">
     <div class="header-inner">
-        <a href="/" class="header-logo squircle">
+        <a href="/" class="header-logo">
             {% if site_settings and site_settings.logo %}
                 <img src="{{ site_settings.logo.url }}" alt="Логотип">
             {% else %}
@@ -15,7 +15,7 @@
         </nav>
 
         <div class="header-actions">
-            <a href="tel:{{ phone }}" class="header-phone squircle squircle-dark">
+            <a href="tel:{{ phone }}" class="header-phone">
                 {{ phone }}
             </a>
             <a href="#" class="btn btn-dark header-cta">
