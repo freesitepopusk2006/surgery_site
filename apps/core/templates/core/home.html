@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<section class="hero-shell">
+    <div class="main-squircle">
+
+        <section class="section section-help" id="help">
+            <div class="section-heading">
+                <span class="section-kicker">Раздел</span>
+                <h1>С чем я могу помочь</h1>
+            </div>
+            <div class="section-body">
+                <p>
+                    Здесь будет краткое описание направлений помощи. Пока ставим заглушку, позже
+                    подключим редактирование через админку.
+                </p>
+            </div>
+        </section>
+
+        <section class="section section-about" id="about">
+            <div class="section-heading">
+                <span class="section-kicker">Обо мне</span>
+                <h2>Профессиональный подход и современная хирургия</h2>
+            </div>
+
+            <div class="about-grid">
+                <div class="about-photo placeholder-block">
+                    <span>Фото врача</span>
+                </div>
+
+                <div class="about-text">
+                    <p>
+                        Здесь будет блок с фотографией слева и текстом справа. Позже заменим этот текст
+                        на данные из админки.
+                    </p>
+                    <p>
+                        Секция должна выглядеть чисто, спокойно и дорого — в чёрно-белой минималистичной стилистике.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section section-cases" id="cases">
+            <div class="section-heading">
+                <span class="section-kicker">Кейсы</span>
+                <h2>Примеры работ</h2>
+                <p>Ниже будут 5 карточек с изображением, описанием и кнопкой «Читать подробнее».</p>
+            </div>
+
+            <div class="cases-grid">
+                {% for i in "12345" %}
+                <article class="case-card">
+                    <div class="case-image placeholder-block">
+                        <span>Фото кейса</span>
+                    </div>
+                    <div class="case-content">
+                        <h3>Название кейса</h3>
+                        <p>Краткое описание результата или клинической ситуации.</p>
+                        <a href="#" class="btn btn-dark">Читать подробнее</a>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="section section-clinic" id="clinic">
+            <div class="section-heading">
+                <span class="section-kicker">Клиника</span>
+                <h2>Где проходит приём</h2>
+            </div>
+            <div class="section-body">
+                <p>
+                    Здесь будет информация о клинике и позже подключим карту.
+                </p>
+                <div class="map-placeholder placeholder-block">
+                    <span>Здесь будет карта</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="section section-prices" id="prices">
+            <div class="section-heading">
+                <span class="section-kicker">Стоимость</span>
+                <h2>Услуги и цены</h2>
+            </div>
+
+            <div class="prices-list">
+                <details class="price-item" open>
+                    <summary>Консультация</summary>
+                    <div class="price-body">
+                        Описание услуги и ориентировочная стоимость. Позже заменим на данные из модели.
+                    </div>
+                </details>
+
+                <details class="price-item">
+                    <summary>Диагностика</summary>
+                    <div class="price-body">
+                        Описание услуги и ориентировочная стоимость. Позже заменим на данные из модели.
+                    </div>
+                </details>
+
+                <details class="price-item">
+                    <summary>Оперативное лечение</summary>
+                    <div class="price-body">
+                        Описание услуги и ориентировочная стоимость. Позже заменим на данные из модели.
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <section class="section section-reviews" id="reviews">
+            <div class="section-heading">
+                <span class="section-kicker">Отзывы</span>
+                <h2>Что говорят пациенты</h2>
+            </div>
+
+            <div class="reviews-grid">
+                <article class="review-card">
+                    <p>“Здесь будет первый отзыв пациента.”</p>
+                    <span>Имя пациента</span>
+                </article>
+
+                <article class="review-card">
+                    <p>“Здесь будет второй отзыв пациента.”</p>
+                    <span>Имя пациента</span>
+                </article>
+
+                <article class="review-card">
+                    <p>“Здесь будет третий отзыв пациента.”</p>
+                    <span>Имя пациента</span>
+                </article>
+            </div>
+        </section>
+
+    </div>
+</section>
+{% endblock %}

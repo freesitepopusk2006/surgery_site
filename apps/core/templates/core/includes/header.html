@@ -1,0 +1,22 @@
+<header class="site-header">
+    <div class="header-inner">
+        <a href="/" class="header-logo squircle">
+            <span>Icon</span>
+        </a>
+
+        <nav class="header-nav">
+            {% for link in nav_links %}
+                <a href="{{ link.href }}" class="header-link">{{ link.label }}</a>
+            {% endfor %}
+        </nav>
+
+        <div class="header-actions">
+            <a href="tel:{{ phone }}" class="header-phone squircle squircle-dark">
+                {{ phone }}
+            </a>
+            <a href="#" class="btn btn-dark header-cta">
+                {{ cta_text }}
+            </a>
+        </div>
+    </div>
+</header>
