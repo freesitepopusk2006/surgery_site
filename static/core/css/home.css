@@ -1,0 +1,54 @@
+.section-help .section-body {
+    max-width: 860px;
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.95fr) minmax(320px, 1.05fr);
+    gap: clamp(20px, 3vw, 36px);
+    align-items: stretch;
+}
+
+.about-photo {
+    min-height: 520px;
+}
+
+.about-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.about-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 18px;
+    padding: clamp(6px, 1vw, 12px) 0;
+    max-width: 720px;
+}
+
+.cases-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.section-clinic .section-body {
+    display: grid;
+    gap: 20px;
+}
+
+.map-placeholder {
+    min-height: 360px;
+}
+
+.prices-list {
+    max-width: 980px;
+}
+
+.reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+}
