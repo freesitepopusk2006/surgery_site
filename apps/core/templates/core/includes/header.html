@@ -1,7 +1,11 @@
 <header class="site-header">
     <div class="header-inner">
         <a href="/" class="header-logo squircle">
-            <span>Icon</span>
+            {% if site_settings and site_settings.logo %}
+                <img src="{{ site_settings.logo.url }}" alt="Логотип">
+            {% else %}
+                <span>Icon</span>
+            {% endif %}
         </a>
 
         <nav class="header-nav">

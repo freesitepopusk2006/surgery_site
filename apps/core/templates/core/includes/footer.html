@@ -2,19 +2,34 @@
     <div class="footer-inner">
         <div class="footer-main">
             <div class="footer-brand">
-                <h3>Имя Фамилия</h3>
-                <p>Адрес клиники или адрес приёма</p>
+                <h3>
+                    {% if site_settings and site_settings.doctor_name %}
+                        {{ site_settings.doctor_name }}
+                    {% else %}
+                        Имя Фамилия
+                    {% endif %}
+                </h3>
+
+                <p>
+                    {% if site_settings and site_settings.address %}
+                        {{ site_settings.address }}
+                    {% else %}
+                        Адрес клиники или адрес приёма
+                    {% endif %}
+                </p>
             </div>
 
             <div class="footer-socials">
-                <a href="#" aria-label="Telegram">TG</a>
-                <a href="#" aria-label="VK">VK</a>
-                <a href="#" aria-label="WhatsApp">WA</a>
+                <a href="{% if site_settings and site_settings.telegram_url %}{{ site_settings.telegram_url }}{% else %}#{% endif %}" aria-label="Telegram">TG</a>
+                <a href="{% if site_settings and site_settings.vk_url %}{{ site_settings.vk_url }}{% else %}#{% endif %}" aria-label="VK">VK</a>
+                <a href="{% if site_settings and site_settings.whatsapp_url %}{{ site_settings.whatsapp_url }}{% else %}#{% endif %}" aria-label="WhatsApp">WA</a>
             </div>
         </div>
 
         <div class="footer-bottom">
-            <a href="#">Политика конфиденциальности</a>
+            <a href="{% if site_settings and site_settings.privacy_policy_url %}{{ site_settings.privacy_policy_url }}{% else %}#{% endif %}">
+                Политика конфиденциальности
+            </a>
         </div>
     </div>
 </footer>
