@@ -5,7 +5,7 @@ from .models import SiteSettings, HomePage, Case, PriceItem, Review
 
 def home_view(request):
     site_settings = SiteSettings.objects.first()
-    homepage = HomePage.objects.first()
+    homepage = HomePage.objects.order_by('-created_at').first()
 
     cases = Case.objects.filter(is_published=True)[:5]
     price_items = PriceItem.objects.filter(is_active=True)
