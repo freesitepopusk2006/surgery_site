@@ -44,7 +44,7 @@
             <div class="about-grid">
                 <div class="about-photo placeholder-block">
                     {% if homepage and homepage.about_photo %}
-                        <img src="{{ homepage.about_photo.url }}" alt="Фото врача">
+                        <img src="{{ homepage.about_photo.url }}" alt="Фото врача" loading="lazy">
                     {% else %}
                         <span>Фото врача</span>
                     {% endif %}
@@ -84,19 +84,19 @@
 
             <div class="cases-grid">
                 {% if cases %}
-                    {% for case in cases %}
+                    {% for case_item in cases %}
                         <article class="case-card">
                             <div class="case-image placeholder-block">
-                                {% if case.image %}
-                                    <img src="{{ case.image.url }}" alt="{{ case.title }}">
+                                {% if case_item.image %}
+                                    <img src="{{ case_item.image.url }}" alt="{{ case_item.title }}" loading="lazy">
                                 {% else %}
                                     <span>Фото кейса</span>
                                 {% endif %}
                             </div>
                             <div class="case-content">
-                                <h3>{{ case.title }}</h3>
-                                <p>{{ case.short_description }}</p>
-                                <a href="{% if case.detail_url %}{{ case.detail_url }}{% else %}#{% endif %}" class="btn btn-dark">
+                                <h3>{{ case_item.title }}</h3>
+                                <p>{{ case_item.short_description }}</p>
+                                <a href="{% if case_item.detail_url %}{{ case_item.detail_url }}{% else %}#{% endif %}" class="btn btn-dark">
                                     Читать подробнее
                                 </a>
                             </div>
