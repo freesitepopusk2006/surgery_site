@@ -64,7 +64,7 @@
     width: 100%;
     min-height: clamp(200px, 28vh, 400px);
     overflow: hidden;
-    background: linear-gradient(180deg, #dfe0e4 0%, #c9ccd2 100%);
+    background: linear-gradient(180deg, #f5f5f7 0%, #e8e8ed 100%);
 }
 
 .hero-bg-full img {
@@ -109,16 +109,16 @@
     position: relative;
     overflow: hidden;
     background: #ffffff;
-    border: 1px solid var(--border-strong);
+    border: 1px solid var(--border);
     border-radius: var(--radius-pill);
-    box-shadow: 0 10px 26px rgba(17, 17, 17, 0.04);
+    box-shadow: 0 8px 24px rgba(29, 29, 31, 0.035);
     transition: border-radius var(--transition), box-shadow var(--transition), transform var(--transition);
 }
 
 .patient-topic:hover,
 .patient-topic:focus-within {
-    border-radius: 34px;
-    box-shadow: 0 16px 36px rgba(17, 17, 17, 0.08);
+    border-radius: 28px;
+    box-shadow: 0 14px 32px rgba(29, 29, 31, 0.06);
     transform: translateY(-1px);
 }
 
@@ -131,6 +131,7 @@
     justify-content: center;
     text-align: center;
     font-size: clamp(0.86rem, 1.1vw, 1rem);
+    font-weight: 400;
     line-height: 1.2;
     letter-spacing: 0;
 }
