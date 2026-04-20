@@ -46,6 +46,7 @@ def home_view(request):
         'reviews': reviews,
         'nav_links': [
             {'label': 'Обо мне', 'href': '/#about'},
+            {'label': 'Услуги и цены', 'href': reverse('core:prices')},
             {'label': 'Отзывы', 'href': '/#reviews'},
             {'label': 'Пациентам', 'href': reverse('core:patients')},
         ],
@@ -58,9 +59,25 @@ def home_view(request):
 def get_nav_links():
     return [
         {'label': 'Обо мне', 'href': '/#about'},
+        {'label': 'Услуги и цены', 'href': reverse('core:prices')},
         {'label': 'Отзывы', 'href': '/#reviews'},
         {'label': 'Пациентам', 'href': reverse('core:patients')},
     ]
+
+
+def prices_view(request):
+    site_settings = get_site_settings()
+    price_items = PriceItem.objects.filter(is_active=True)
+
+    context = {
+        'page_title': 'Услуги и цены',
+        'site_settings': site_settings,
+        'price_items': price_items,
+        'nav_links': get_nav_links(),
+        'cta_text': site_settings.cta_text if site_settings and site_settings.cta_text else 'Запись на приём',
+    }
+    context.update(get_contact_context(site_settings))
+    return render(request, 'core/prices.html', context)
 
 
 def patients_view(request):

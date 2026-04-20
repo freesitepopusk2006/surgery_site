@@ -91,7 +91,8 @@
         min-height: unset;
     }
 
-    .patients-heading {
+    .patients-heading,
+    .prices-page-heading {
         padding-left: 18px;
         padding-right: 18px;
     }

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Услуги и цены{% endblock %}
+
+{% block content %}
+<section class="prices-page-shell">
+    <div class="prices-page-heading">
+        <span class="section-kicker">Стоимость</span>
+        <h1>Услуги и цены</h1>
+    </div>
+
+    <div class="main-squircle-wrap">
+        <div class="main-squircle prices-page-squircle">
+            <div class="prices-list prices-page-list">
+                {% if price_items %}
+                    {% for item in price_items %}
+                        <details class="price-item" {% if forloop.first %}open{% endif %}>
+                            <summary>
+                                {{ item.title }}
+                                {% if item.price_text %}
+                                    <span>{{ item.price_text }}</span>
+                                {% endif %}
+                            </summary>
+                            {% if item.description %}
+                                <div class="price-body">
+                                    {{ item.description|linebreaksbr }}
+                                </div>
+                            {% endif %}
+                        </details>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <h2>Прайс пока не заполнен</h2>
+                        <p>Добавьте услуги в админке или загрузите CSV через команду импорта.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

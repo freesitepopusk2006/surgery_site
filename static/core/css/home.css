@@ -90,6 +90,44 @@
     max-width: 980px;
 }
 
+.prices-page-shell {
+    padding: clamp(32px, 5vw, 72px) 0 clamp(36px, 5vw, 72px);
+}
+
+.prices-page-heading {
+    width: min(100%, var(--container));
+    margin: 0 auto;
+    padding: 0 clamp(12px, 2vw, 24px) clamp(20px, 3vw, 32px);
+}
+
+.prices-page-squircle {
+    min-height: unset;
+}
+
+.prices-page-list {
+    margin: 0 auto;
+}
+
+.empty-state {
+    max-width: 680px;
+    padding: clamp(22px, 3vw, 32px);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+}
+
+.empty-state h2 {
+    margin: 0 0 10px;
+    font-size: clamp(1.25rem, 2vw, 1.65rem);
+    font-weight: 400;
+}
+
+.empty-state p {
+    margin: 0;
+    color: var(--text-soft);
+    line-height: 1.6;
+}
+
 .reviews-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
