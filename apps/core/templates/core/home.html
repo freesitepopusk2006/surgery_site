@@ -88,7 +88,8 @@
                     </p>
                 </div>
 
-                <div class="cases-grid">
+                <div class="cases-showcase">
+                    <div class="cases-grid">
                     {% if cases %}
                         {% for case_item in cases %}
                             <article class="case-card">
@@ -127,6 +128,7 @@
                     <a class="cases-next-link" href="{% url 'core:patients' %}" aria-label="Перейти на страницу Пациентам">
                         <span aria-hidden="true">&rarr;</span>
                     </a>
+                </div>
                 </div>
             </section>
 

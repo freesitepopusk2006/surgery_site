@@ -29,6 +29,13 @@
     max-width: 720px;
 }
 
+.cases-showcase {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 52px;
+    gap: 16px;
+    align-items: center;
+}
+
 .cases-grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -37,8 +44,7 @@
 
 .cases-more {
     display: flex;
-    justify-content: flex-end;
-    margin-top: 18px;
+    justify-content: center;
 }
 
 .cases-next-link {

@@ -42,6 +42,11 @@
         grid-template-columns: 1fr;
     }
 
+    .cases-showcase {
+        grid-template-columns: minmax(0, 1fr) 52px;
+        gap: 12px;
+    }
+
     .patients-squircle {
         min-height: unset;
     }
