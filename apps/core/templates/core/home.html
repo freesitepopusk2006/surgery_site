@@ -146,15 +146,18 @@
                         {% endif %}
                     </p>
 
-                    {% if homepage and homepage.clinic_map_embed %}
-                        <div class="map-placeholder">
-                            {{ homepage.clinic_map_embed|safe }}
-                        </div>
-                    {% else %}
-                        <div class="map-placeholder placeholder-block">
-                            <span>Здесь будет карта</span>
-                        </div>
-                    {% endif %}
+                    <p class="clinic-address">
+                        Российская Федерация, г. Москва, ул. Садовая-Самотечная, д. 16 стр. 1
+                    </p>
+
+                    <div class="map-placeholder">
+                        <iframe
+                            src="https://yandex.ru/map-widget/v1/?ll=37.618390%2C55.773170&mode=whatshere&whatshere%5Bpoint%5D=37.618390%2C55.773170&whatshere%5Bzoom%5D=17&z=17"
+                            title="Карта проезда: Москва, Садовая-Самотечная, 16 стр. 1"
+                            loading="lazy"
+                            allowfullscreen>
+                        </iframe>
+                    </div>
                 </div>
             </section>
 

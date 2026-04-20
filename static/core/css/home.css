@@ -40,6 +40,11 @@
     gap: 20px;
 }
 
+.clinic-address {
+    color: var(--text);
+    font-size: clamp(1rem, 1.4vw, 1.08rem);
+}
+
 .map-placeholder {
     min-height: 360px;
 }
