@@ -101,7 +101,7 @@
     }
 
     .patient-topic h2 {
-        min-height: 72px;
+        min-height: unset;
         padding: 16px 18px;
         font-size: 1rem;
     }

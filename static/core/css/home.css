@@ -93,16 +93,16 @@
 }
 
 .patients-squircle {
-    min-height: clamp(420px, 52vw, 680px);
+    min-height: unset;
 }
 
 .patient-topics {
     display: grid;
-    grid-template-columns: repeat(7, minmax(150px, 1fr));
-    gap: clamp(10px, 1.2vw, 14px);
-    align-items: start;
-    overflow-x: auto;
-    padding-bottom: 8px;
+    grid-template-columns: 1fr;
+    gap: clamp(12px, 1.5vw, 18px);
+    align-items: stretch;
+    max-width: 920px;
+    margin: 0 auto;
 }
 
 .patient-topic {
@@ -110,7 +110,7 @@
     overflow: hidden;
     background: #ffffff;
     border: 1px solid var(--border);
-    border-radius: var(--radius-pill);
+    border-radius: 18px;
     box-shadow: 0 8px 24px rgba(29, 29, 31, 0.035);
     transition: border-radius var(--transition), box-shadow var(--transition), transform var(--transition);
 }
@@ -123,16 +123,16 @@
 }
 
 .patient-topic h2 {
-    min-height: 112px;
+    min-height: unset;
     margin: 0;
-    padding: 16px clamp(14px, 1.6vw, 20px);
+    padding: 20px clamp(18px, 2.4vw, 28px);
     display: flex;
     align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-size: clamp(0.86rem, 1.1vw, 1rem);
+    justify-content: flex-start;
+    text-align: left;
+    font-size: clamp(1rem, 1.5vw, 1.18rem);
     font-weight: 400;
-    line-height: 1.2;
+    line-height: 1.25;
     letter-spacing: 0;
 }
 
@@ -141,7 +141,7 @@
     gap: 8px;
     max-height: 0;
     opacity: 0;
-    padding: 0 clamp(14px, 1.6vw, 20px);
+    padding: 0 clamp(18px, 2.4vw, 28px);
     border-top: 1px solid transparent;
     transform: translateY(-6px);
     transition: max-height var(--transition), opacity var(--transition), padding var(--transition), transform var(--transition), border-color var(--transition);
