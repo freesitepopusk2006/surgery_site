@@ -42,10 +42,6 @@
         grid-template-columns: 1fr;
     }
 
-    .patient-topics {
-        grid-template-columns: 1fr;
-    }
-
     .patients-squircle {
         min-height: unset;
     }

@@ -98,9 +98,11 @@
 
 .patient-topics {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(14px, 2vw, 20px);
+    grid-template-columns: repeat(7, minmax(150px, 1fr));
+    gap: clamp(10px, 1.2vw, 14px);
     align-items: start;
+    overflow-x: auto;
+    padding-bottom: 8px;
 }
 
 .patient-topic {
@@ -121,12 +123,14 @@
 }
 
 .patient-topic h2 {
-    min-height: 82px;
+    min-height: 112px;
     margin: 0;
-    padding: 18px clamp(22px, 3vw, 30px);
+    padding: 16px clamp(14px, 1.6vw, 20px);
     display: flex;
     align-items: center;
-    font-size: clamp(1rem, 1.8vw, 1.28rem);
+    justify-content: center;
+    text-align: center;
+    font-size: clamp(0.86rem, 1.1vw, 1rem);
     line-height: 1.2;
     letter-spacing: 0;
 }
@@ -136,7 +140,7 @@
     gap: 8px;
     max-height: 0;
     opacity: 0;
-    padding: 0 clamp(22px, 3vw, 30px);
+    padding: 0 clamp(14px, 1.6vw, 20px);
     border-top: 1px solid transparent;
     transform: translateY(-6px);
     transition: max-height var(--transition), opacity var(--transition), padding var(--transition), transform var(--transition), border-color var(--transition);
