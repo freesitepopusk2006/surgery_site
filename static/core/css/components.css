@@ -288,18 +288,24 @@
 }
 
 .case-content {
-    padding: 18px 18px 20px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
+.case-content h3 {
+    font-size: clamp(1rem, 1.15vw, 1.18rem);
+}
+
 .case-content p {
     min-height: 3em;
+    font-size: 0.95rem;
+    line-height: 1.5;
 }
 
 .case-image {
-    min-height: 260px;
+    min-height: 190px;
     border-radius: 0;
     border: 0;
     border-bottom: 1px solid var(--border);

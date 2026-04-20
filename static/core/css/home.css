@@ -31,8 +31,39 @@
 
 .cases-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.cases-more {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 18px;
+}
+
+.cases-next-link {
+    width: 52px;
+    height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow-card);
+    font-size: 1.45rem;
+    line-height: 1;
+    transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+}
+
+.cases-next-link:hover,
+.cases-next-link:focus-visible {
+    transform: translateX(3px);
+    background: var(--surface-dark);
+    color: #fff;
+    box-shadow: 0 12px 28px rgba(29, 29, 31, 0.08);
+    outline: 0;
 }
 
 .section-clinic .section-body {
