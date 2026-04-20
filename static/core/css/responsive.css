@@ -42,6 +42,14 @@
         grid-template-columns: 1fr;
     }
 
+    .patient-topics {
+        grid-template-columns: 1fr;
+    }
+
+    .patients-squircle {
+        min-height: unset;
+    }
+
     .footer-main {
         flex-direction: column;
         align-items: flex-start;
@@ -80,5 +88,30 @@
 
     .review-card {
         min-height: unset;
+    }
+
+    .patients-heading {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .patient-topic {
+        border-radius: 28px;
+    }
+
+    .patient-topic:hover,
+    .patient-topic:focus-within {
+        border-radius: 28px;
+    }
+
+    .patient-topic h2 {
+        min-height: 72px;
+        padding: 16px 18px;
+        font-size: 1rem;
+    }
+
+    .patient-subtopics {
+        padding-left: 18px;
+        padding-right: 18px;
     }
 }

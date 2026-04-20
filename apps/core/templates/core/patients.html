@@ -3,23 +3,77 @@
 {% block title %}Пациентам{% endblock %}
 
 {% block content %}
-<section class="section patient-page">
-    <div class="container">
+<section class="patients-shell">
+    <div class="patients-heading">
         <h1>Пациентам</h1>
-        <p>Добро пожаловать на страницу для пациентов. Здесь вы можете узнать о подготовке к приёму, основных услугах и правилах обращения.</p>
+    </div>
 
-        <div class="patient-info">
-            <h2>Что нужно знать перед визитом</h2>
-            <ul>
-                <li>Подготовьте ваши документы и медицинскую карту.</li>
-                <li>Запишитесь на приём заранее по телефону или через сайт.</li>
-                <li>Сообщите о хронических заболеваниях и аллергиях.</li>
-            </ul>
-        </div>
+    <div class="main-squircle-wrap">
+        <div class="main-squircle patients-squircle">
+            <div class="patient-topics" aria-label="Разделы для пациентов">
+                <article class="patient-topic">
+                    <h2>Памятка пациенту</h2>
+                    <div class="patient-subtopics">
+                        <a href="#">Подраздел 1</a>
+                        <a href="#">Подраздел 2</a>
+                        <a href="#">Подраздел 3</a>
+                    </div>
+                </article>
 
-        <div class="patient-contact">
-            <h2>Контакты</h2>
-            <p>Если у вас остались вопросы, позвоните нам: <a href="tel:{{ phone }}">{{ phone }}</a></p>
+                <article class="patient-topic">
+                    <h2>Катаракта, замена хрусталика, факоэмульсификация</h2>
+                    <div class="patient-subtopics">
+                        <a href="#">Подраздел 1</a>
+                        <a href="#">Подраздел 2</a>
+                        <a href="#">Подраздел 3</a>
+                    </div>
+                </article>
+
+                <article class="patient-topic">
+                    <h2>Диабетическая ретинопатия</h2>
+                    <div class="patient-subtopics">
+                        <a href="#">Подраздел 1</a>
+                        <a href="#">Подраздел 2</a>
+                        <a href="#">Подраздел 3</a>
+                    </div>
+                </article>
+
+                <article class="patient-topic">
+                    <h2>Возрастная макулярная дегенерация (Макулодистрофия)</h2>
+                    <div class="patient-subtopics">
+                        <a href="#">Подраздел 1</a>
+                        <a href="#">Подраздел 2</a>
+                        <a href="#">Подраздел 3</a>
+                    </div>
+                </article>
+
+                <article class="patient-topic">
+                    <h2>Глаукома</h2>
+                    <div class="patient-subtopics">
+                        <a href="#">Подраздел 1</a>
+                        <a href="#">Подраздел 2</a>
+                        <a href="#">Подраздел 3</a>
+                    </div>
+                </article>
+
+                <article class="patient-topic">
+                    <h2>Искусственный хрусталик (Интраокулярные линзы)</h2>
+                    <div class="patient-subtopics">
+                        <a href="#">Подраздел 1</a>
+                        <a href="#">Подраздел 2</a>
+                        <a href="#">Подраздел 3</a>
+                    </div>
+                </article>
+
+                <article class="patient-topic">
+                    <h2>Интравитреальные инъекции</h2>
+                    <div class="patient-subtopics">
+                        <a href="#">Подраздел 1</a>
+                        <a href="#">Подраздел 2</a>
+                        <a href="#">Подраздел 3</a>
+                    </div>
+                </article>
+            </div>
         </div>
     </div>
 </section>

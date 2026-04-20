@@ -81,3 +81,86 @@
     z-index: 1;
     margin-top: 0;
 }
+
+.patients-shell {
+    padding: clamp(32px, 5vw, 72px) 0 clamp(36px, 5vw, 72px);
+}
+
+.patients-heading {
+    width: min(100%, var(--container));
+    margin: 0 auto;
+    padding: 0 clamp(12px, 2vw, 24px) clamp(20px, 3vw, 32px);
+}
+
+.patients-squircle {
+    min-height: clamp(420px, 52vw, 680px);
+}
+
+.patient-topics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(14px, 2vw, 20px);
+    align-items: start;
+}
+
+.patient-topic {
+    position: relative;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    box-shadow: 0 10px 26px rgba(17, 17, 17, 0.04);
+    transition: border-radius var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+
+.patient-topic:hover,
+.patient-topic:focus-within {
+    border-radius: 34px;
+    box-shadow: 0 16px 36px rgba(17, 17, 17, 0.08);
+    transform: translateY(-1px);
+}
+
+.patient-topic h2 {
+    min-height: 82px;
+    margin: 0;
+    padding: 18px clamp(22px, 3vw, 30px);
+    display: flex;
+    align-items: center;
+    font-size: clamp(1rem, 1.8vw, 1.28rem);
+    line-height: 1.2;
+    letter-spacing: 0;
+}
+
+.patient-subtopics {
+    display: grid;
+    gap: 8px;
+    max-height: 0;
+    opacity: 0;
+    padding: 0 clamp(22px, 3vw, 30px);
+    border-top: 1px solid transparent;
+    transform: translateY(-6px);
+    transition: max-height var(--transition), opacity var(--transition), padding var(--transition), transform var(--transition), border-color var(--transition);
+}
+
+.patient-topic:hover .patient-subtopics,
+.patient-topic:focus-within .patient-subtopics {
+    max-height: 220px;
+    opacity: 1;
+    padding-bottom: 22px;
+    border-top-color: var(--border);
+    transform: translateY(0);
+}
+
+.patient-subtopics a {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    color: var(--text-soft);
+    font-size: 0.96rem;
+    line-height: 1.35;
+}
+
+.patient-subtopics a:hover,
+.patient-subtopics a:focus-visible {
+    color: var(--text);
+}
