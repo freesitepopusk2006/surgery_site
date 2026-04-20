@@ -1,3 +1,4 @@
+from django.db import OperationalError, ProgrammingError
 from django.shortcuts import render
 from django.urls import reverse
 
@@ -21,8 +22,15 @@ def get_contact_context(site_settings):
     }
 
 
+def get_site_settings():
+    try:
+        return SiteSettings.objects.defer('max_url').first()
+    except (OperationalError, ProgrammingError):
+        return None
+
+
 def home_view(request):
-    site_settings = SiteSettings.objects.first()
+    site_settings = get_site_settings()
     homepage = HomePage.objects.order_by('-created_at').first()
 
     cases = Case.objects.filter(is_published=True)[:5]
@@ -56,7 +64,7 @@ def get_nav_links():
 
 
 def patients_view(request):
-    site_settings = SiteSettings.objects.first()
+    site_settings = get_site_settings()
 
     context = {
         'page_title': 'Пациентам',
