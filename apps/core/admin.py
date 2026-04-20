@@ -13,7 +13,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
             'fields': ('doctor_name', 'address')
         }),
         ('Социальные сети', {
-            'fields': ('telegram_url', 'vk_url', 'whatsapp_url')
+            'fields': ('telegram_url', 'whatsapp_url', 'max_url')
         }),
         ('Политика', {
             'fields': ('privacy_policy_url',)

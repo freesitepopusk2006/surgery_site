@@ -43,6 +43,11 @@ class SiteSettings(models.Model):
         verbose_name='Ссылка на WhatsApp'
     )
 
+    max_url = models.URLField(
+        blank=True,
+        verbose_name='Ссылка на Max'
+    )
+
     privacy_policy_url = models.URLField(
         blank=True,
         verbose_name='Ссылка на политику конфиденциальности'
