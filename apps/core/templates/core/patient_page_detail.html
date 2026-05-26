@@ -3,6 +3,139 @@
 {% block title %}{{ patient_page.title }}{% endblock %}
 
 {% block content %}
+<style>
+    .patient-detail-shell {
+        padding-top: clamp(72px, 8vw, 128px) !important;
+    }
+
+    .patient-detail-shell .patient-detail-squircle {
+        row-gap: clamp(88px, 9vw, 150px) !important;
+        padding: clamp(64px, 7vw, 108px) clamp(52px, 8vw, 132px) clamp(88px, 9vw, 150px) !important;
+    }
+
+    .patient-detail-shell .patient-detail-heading {
+        max-width: 1120px !important;
+        margin: 0 auto clamp(30px, 4vw, 68px) !important;
+        text-align: center !important;
+    }
+
+    .patient-detail-shell .patient-detail-heading h1 {
+        margin: 0 !important;
+        line-height: 1.04 !important;
+    }
+
+    .patient-detail-shell .patient-detail-image {
+        margin: 0 auto clamp(42px, 5vw, 84px) !important;
+        width: min(100%, 1120px) !important;
+    }
+
+    .patient-detail-shell .patient-toc {
+        width: min(100%, 1040px) !important;
+        margin: clamp(20px, 3vw, 52px) auto clamp(46px, 6vw, 96px) !important;
+        padding: clamp(30px, 4vw, 48px) !important;
+        background: #f4fbfd !important;
+        border: 1px solid rgba(45, 120, 144, 0.3) !important;
+        border-radius: 8px !important;
+    }
+
+    .patient-detail-shell .patient-toc h2 {
+        margin: 0 0 clamp(22px, 3vw, 38px) !important;
+        color: #245f73 !important;
+        font-size: clamp(1.55rem, 2.2vw, 2rem) !important;
+    }
+
+    .patient-detail-shell .patient-toc li,
+    .patient-detail-shell .patient-toc a {
+        color: #2d7890 !important;
+        font-size: clamp(1.12rem, 1.45vw, 1.28rem) !important;
+        line-height: 1.55 !important;
+    }
+
+    .patient-detail-shell .patient-description {
+        width: min(100%, 1120px) !important;
+        margin: 0 auto clamp(72px, 8vw, 132px) !important;
+        padding: clamp(36px, 5vw, 72px) 0 !important;
+        font-size: clamp(1.28rem, 1.8vw, 1.56rem) !important;
+        line-height: 1.85 !important;
+    }
+
+    .patient-detail-shell .patient-sections {
+        display: grid !important;
+        gap: clamp(110px, 11vw, 180px) !important;
+    }
+
+    .patient-detail-shell .patient-section {
+        display: grid !important;
+        gap: clamp(48px, 5vw, 78px) !important;
+        padding-top: clamp(72px, 8vw, 118px) !important;
+    }
+
+    .patient-detail-shell .patient-section h2 {
+        width: min(100%, 1120px) !important;
+        margin: 0 auto !important;
+        font-size: clamp(2.1rem, 3.4vw, 3.25rem) !important;
+        line-height: 1.12 !important;
+    }
+
+    .patient-detail-shell .patient-section-content {
+        width: min(100%, 1120px) !important;
+        margin: 0 auto !important;
+        font-size: clamp(1.18rem, 1.55vw, 1.36rem) !important;
+        line-height: 1.9 !important;
+    }
+
+    .patient-detail-shell .patient-description p,
+    .patient-detail-shell .patient-section-content p {
+        margin: 0 0 clamp(36px, 4vw, 64px) !important;
+    }
+
+    .patient-detail-shell .patient-description p:last-child,
+    .patient-detail-shell .patient-section-content p:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    .patient-detail-shell .patient-description ul,
+    .patient-detail-shell .patient-section-content ul,
+    .patient-detail-shell .patient-bullet-list {
+        display: grid !important;
+        gap: clamp(18px, 2vw, 28px) !important;
+        margin: clamp(30px, 4vw, 56px) 0 clamp(52px, 6vw, 96px) !important;
+        padding: 0 !important;
+        list-style: none !important;
+    }
+
+    .patient-detail-shell .patient-description li,
+    .patient-detail-shell .patient-section-content li,
+    .patient-detail-shell .patient-bullet-list li {
+        position: relative !important;
+        padding-left: 38px !important;
+    }
+
+    .patient-detail-shell .patient-description li::before,
+    .patient-detail-shell .patient-section-content li::before,
+    .patient-detail-shell .patient-bullet-list li::before {
+        content: "\2022" !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0.02em !important;
+        color: #2d7890 !important;
+        font-size: 1.45em !important;
+        line-height: 1 !important;
+    }
+
+    @media (max-width: 640px) {
+        .patient-detail-shell .patient-detail-squircle {
+            row-gap: 56px !important;
+            padding: 34px 18px 56px !important;
+        }
+
+        .patient-detail-shell .patient-section {
+            gap: 34px !important;
+            padding-top: 54px !important;
+        }
+    }
+</style>
+
 <article class="patient-detail-shell">
     <div class="main-squircle-wrap">
         <div class="main-squircle patient-detail-squircle">
