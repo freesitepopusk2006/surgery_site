@@ -1,7 +1,16 @@
 from django.contrib import admin
 from django import forms
 from django.utils.html import format_html
-from .models import SiteSettings, HomePage, Case, PriceItem, Review
+from .models import (
+    SiteSettings,
+    HomePage,
+    Case,
+    PriceItem,
+    Review,
+    PatientCategory,
+    PatientPage,
+    PatientPageSection,
+)
 
 
 class ExistingImageFormMixin:
@@ -32,6 +41,11 @@ class HomePageAdminForm(ExistingImageFormMixin, forms.ModelForm):
 class CaseAdminForm(ExistingImageFormMixin, forms.ModelForm):
     def clean_image(self):
         return self._keep_existing_image('image')
+
+
+class PatientPageAdminForm(ExistingImageFormMixin, forms.ModelForm):
+    def clean_main_image(self):
+        return self._keep_existing_image('main_image')
 
 
 class ImagePreviewAdminMixin:
@@ -157,3 +171,44 @@ class ReviewAdmin(admin.ModelAdmin):
     list_display = ('patient_name', 'source', 'order', 'show_on_home', 'is_published')
     list_editable = ('order', 'show_on_home', 'is_published')
     search_fields = ('patient_name', 'text', 'source')
+
+
+@admin.register(PatientCategory)
+class PatientCategoryAdmin(admin.ModelAdmin):
+    list_display = ('title', 'order', 'is_published')
+    list_editable = ('order', 'is_published')
+    prepopulated_fields = {'slug': ('title',)}
+    search_fields = ('title',)
+
+
+class PatientPageSectionInline(admin.StackedInline):
+    model = PatientPageSection
+    extra = 0
+    fields = ('title', 'content', 'order')
+
+
+@admin.register(PatientPage)
+class PatientPageAdmin(ImagePreviewAdminMixin, admin.ModelAdmin):
+    form = PatientPageAdminForm
+    list_display = ('title', 'category', 'order', 'is_published')
+    list_filter = ('category', 'is_published')
+    list_editable = ('order', 'is_published')
+    prepopulated_fields = {'slug': ('title',)}
+    search_fields = ('title', 'description', 'sections__title', 'sections__content')
+    readonly_fields = ('main_image_preview',)
+    inlines = (PatientPageSectionInline,)
+    fieldsets = (
+        ('Основное', {
+            'fields': ('category', 'title', 'slug', 'description')
+        }),
+        ('Изображение', {
+            'fields': ('main_image_preview', 'main_image')
+        }),
+        ('Публикация', {
+            'fields': ('order', 'is_published', 'source_url')
+        }),
+    )
+
+    @admin.display(description='Текущая основная картинка')
+    def main_image_preview(self, obj):
+        return self.image_preview(obj, 'main_image')

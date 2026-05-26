@@ -1,8 +1,8 @@
 from django.db import OperationalError, ProgrammingError
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 
-from .models import SiteSettings, HomePage, Case, PriceItem, Review
+from .models import SiteSettings, HomePage, Case, PriceItem, Review, PatientCategory, PatientPage
 
 
 CONTACT_PHONE = '+7 499 394 34 52'
@@ -82,12 +82,38 @@ def prices_view(request):
 
 def patients_view(request):
     site_settings = get_site_settings()
+    patient_categories = PatientCategory.objects.filter(
+        is_published=True,
+        pages__is_published=True,
+    ).prefetch_related('pages').distinct()
 
     context = {
         'page_title': 'Пациентам',
         'site_settings': site_settings,
+        'patient_categories': patient_categories,
         'nav_links': get_nav_links(),
         'cta_text': site_settings.cta_text if site_settings and site_settings.cta_text else 'Запись на приём',
     }
     context.update(get_contact_context(site_settings))
     return render(request, 'core/patients.html', context)
+
+
+def patient_page_detail_view(request, slug):
+    site_settings = get_site_settings()
+    patient_page = get_object_or_404(
+        PatientPage.objects.select_related('category').prefetch_related('sections'),
+        slug=slug,
+        is_published=True,
+        category__is_published=True,
+    )
+
+    context = {
+        'page_title': patient_page.title,
+        'site_settings': site_settings,
+        'patient_page': patient_page,
+        'sections': patient_page.sections.all(),
+        'nav_links': get_nav_links(),
+        'cta_text': site_settings.cta_text if site_settings and site_settings.cta_text else 'Запись на приём',
+    }
+    context.update(get_contact_context(site_settings))
+    return render(request, 'core/patient_page_detail.html', context)

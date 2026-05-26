@@ -246,3 +246,110 @@ class Review(models.Model):
 
     def __str__(self):
         return self.patient_name
+
+
+class PatientCategory(models.Model):
+    title = models.CharField(
+        max_length=255,
+        unique=True,
+        verbose_name='Название раздела'
+    )
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+        allow_unicode=True,
+        verbose_name='URL раздела'
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        verbose_name='Порядок'
+    )
+    is_published = models.BooleanField(
+        default=True,
+        verbose_name='Опубликовано'
+    )
+
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = 'Раздел для пациентов'
+        verbose_name_plural = 'Разделы для пациентов'
+
+    def __str__(self):
+        return self.title
+
+
+class PatientPage(models.Model):
+    category = models.ForeignKey(
+        PatientCategory,
+        on_delete=models.CASCADE,
+        related_name='pages',
+        verbose_name='Раздел'
+    )
+    title = models.CharField(
+        max_length=255,
+        verbose_name='Заголовок'
+    )
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+        allow_unicode=True,
+        verbose_name='URL страницы'
+    )
+    description = models.TextField(
+        blank=True,
+        verbose_name='Описание'
+    )
+    main_image = models.ImageField(
+        upload_to='patients/',
+        blank=True,
+        null=True,
+        verbose_name='Основная картинка'
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        verbose_name='Порядок'
+    )
+    is_published = models.BooleanField(
+        default=True,
+        verbose_name='Опубликовано'
+    )
+    source_url = models.URLField(
+        blank=True,
+        verbose_name='Источник'
+    )
+
+    class Meta:
+        ordering = ['category__order', 'order', 'id']
+        verbose_name = 'Страница для пациентов'
+        verbose_name_plural = 'Страницы для пациентов'
+
+    def __str__(self):
+        return self.title
+
+
+class PatientPageSection(models.Model):
+    page = models.ForeignKey(
+        PatientPage,
+        on_delete=models.CASCADE,
+        related_name='sections',
+        verbose_name='Страница'
+    )
+    title = models.CharField(
+        max_length=255,
+        verbose_name='Название части'
+    )
+    content = models.TextField(
+        verbose_name='Контент'
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        verbose_name='Порядок'
+    )
+
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = 'Часть страницы для пациентов'
+        verbose_name_plural = 'Части страниц для пациентов'
+
+    def __str__(self):
+        return self.title

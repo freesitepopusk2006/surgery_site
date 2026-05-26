@@ -10,70 +10,27 @@
 
     <div class="main-squircle-wrap">
         <div class="main-squircle patients-squircle">
-            <div class="patient-topics" aria-label="Разделы для пациентов">
-                <article class="patient-topic">
-                    <h2>Памятка пациенту</h2>
-                    <div class="patient-subtopics">
-                        <a href="#">Подраздел 1</a>
-                        <a href="#">Подраздел 2</a>
-                        <a href="#">Подраздел 3</a>
-                    </div>
-                </article>
-
-                <article class="patient-topic">
-                    <h2>Катаракта, замена хрусталика, факоэмульсификация</h2>
-                    <div class="patient-subtopics">
-                        <a href="#">Подраздел 1</a>
-                        <a href="#">Подраздел 2</a>
-                        <a href="#">Подраздел 3</a>
-                    </div>
-                </article>
-
-                <article class="patient-topic">
-                    <h2>Диабетическая ретинопатия</h2>
-                    <div class="patient-subtopics">
-                        <a href="#">Подраздел 1</a>
-                        <a href="#">Подраздел 2</a>
-                        <a href="#">Подраздел 3</a>
-                    </div>
-                </article>
-
-                <article class="patient-topic">
-                    <h2>Возрастная макулярная дегенерация (Макулодистрофия)</h2>
-                    <div class="patient-subtopics">
-                        <a href="#">Подраздел 1</a>
-                        <a href="#">Подраздел 2</a>
-                        <a href="#">Подраздел 3</a>
-                    </div>
-                </article>
-
-                <article class="patient-topic">
-                    <h2>Глаукома</h2>
-                    <div class="patient-subtopics">
-                        <a href="#">Подраздел 1</a>
-                        <a href="#">Подраздел 2</a>
-                        <a href="#">Подраздел 3</a>
-                    </div>
-                </article>
-
-                <article class="patient-topic">
-                    <h2>Искусственный хрусталик (Интраокулярные линзы)</h2>
-                    <div class="patient-subtopics">
-                        <a href="#">Подраздел 1</a>
-                        <a href="#">Подраздел 2</a>
-                        <a href="#">Подраздел 3</a>
-                    </div>
-                </article>
-
-                <article class="patient-topic">
-                    <h2>Интравитреальные инъекции</h2>
-                    <div class="patient-subtopics">
-                        <a href="#">Подраздел 1</a>
-                        <a href="#">Подраздел 2</a>
-                        <a href="#">Подраздел 3</a>
-                    </div>
-                </article>
-            </div>
+            {% if patient_categories %}
+                <div class="patient-topics" aria-label="Разделы для пациентов">
+                    {% for category in patient_categories %}
+                        <article class="patient-topic">
+                            <h2>{{ category.title }}</h2>
+                            <div class="patient-subtopics">
+                                {% for page in category.pages.all %}
+                                    {% if page.is_published %}
+                                        <a href="{% url 'core:patient_page_detail' page.slug %}">{{ page.title }}</a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <h2>Разделы пока не заполнены</h2>
+                    <p>Добавьте категории и страницы для пациентов через админку.</p>
+                </div>
+            {% endif %}
         </div>
     </div>
 </section>

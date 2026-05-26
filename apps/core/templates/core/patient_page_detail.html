@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ patient_page.title }}{% endblock %}
+
+{% block content %}
+<article class="patient-detail-shell">
+    <div class="patient-detail-heading">
+        <a class="patient-back-link" href="{% url 'core:patients' %}">Пациентам</a>
+        <h1>{{ patient_page.title }}</h1>
+    </div>
+
+    <div class="main-squircle-wrap">
+        <div class="main-squircle patient-detail-squircle">
+            <div class="patient-detail-image placeholder-block">
+                {% if patient_page.main_image %}
+                    <img src="{{ patient_page.main_image.url }}" alt="{{ patient_page.title }}" loading="eager">
+                {% else %}
+                    <span>Основная картинка</span>
+                {% endif %}
+            </div>
+
+            {% if sections %}
+                <nav class="patient-toc" aria-label="Содержание">
+                    <h2>Содержание</h2>
+                    <ol>
+                        {% for section in sections %}
+                            <li><a href="#section-{{ section.id }}">{{ section.title }}</a></li>
+                        {% endfor %}
+                    </ol>
+                </nav>
+            {% endif %}
+
+            {% if patient_page.description %}
+                <section class="patient-description">
+                    {{ patient_page.description|linebreaks }}
+                </section>
+            {% endif %}
+
+            <div class="patient-sections">
+                {% for section in sections %}
+                    <section class="patient-section" id="section-{{ section.id }}">
+                        <h2>{{ section.title }}</h2>
+                        <div class="patient-section-content">
+                            {{ section.content|linebreaks }}
+                        </div>
+                    </section>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</article>
+{% endblock %}
