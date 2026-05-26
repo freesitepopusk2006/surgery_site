@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load patient_text %}
 
 {% block title %}{{ patient_page.title }}{% endblock %}
 
@@ -32,7 +31,7 @@
 
             {% if patient_page.description %}
                 <section class="patient-description">
-                    {{ patient_page.description|patient_text }}
+                    {{ description_html }}
                 </section>
             {% endif %}
 
@@ -41,7 +40,7 @@
                     <section class="patient-section" id="section-{{ section.id }}">
                         <h2>{{ section.title }}</h2>
                         <div class="patient-section-content">
-                            {{ section.content|patient_text }}
+                            {{ section.content_html }}
                         </div>
                     </section>
                 {% endfor %}

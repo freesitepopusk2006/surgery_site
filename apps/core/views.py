@@ -1,6 +1,8 @@
 from django.db import OperationalError, ProgrammingError
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.html import conditional_escape
+from django.utils.safestring import mark_safe
 
 from .models import SiteSettings, HomePage, Case, PriceItem, Review, PatientCategory, PatientPage
 
@@ -10,6 +12,7 @@ CONTACT_PHONE_HREF = '+74993943452'
 CONTACT_TELEGRAM_URL = 'https://t.me/Opht_KutinIM'
 CONTACT_WHATSAPP_URL = 'https://wa.me/74993943452'
 CONTACT_MAX_URL = 'https://max.ru/u/f9LHodD0cOLrvB0ibZk95T51QLuO4dRf1jeg-4mAenQNMPsj4h0MNExk0QA'
+LIST_ITEM_MAX_LENGTH = 240
 
 
 def get_contact_context(site_settings):
@@ -98,6 +101,71 @@ def patients_view(request):
     return render(request, 'core/patients.html', context)
 
 
+def split_patient_text_blocks(value):
+    blocks = []
+    current = []
+
+    for raw_line in str(value or '').replace('\r\n', '\n').split('\n'):
+        line = raw_line.strip()
+        if line:
+            current.append(line)
+            continue
+
+        if current:
+            blocks.append('\n'.join(current))
+            current = []
+
+    if current:
+        blocks.append('\n'.join(current))
+
+    return blocks
+
+
+def is_patient_list_item(block):
+    if '\n' in block:
+        return False
+    if len(block) > LIST_ITEM_MAX_LENGTH:
+        return False
+    if block.endswith(':'):
+        return False
+    return True
+
+
+def render_patient_text(value):
+    blocks = split_patient_text_blocks(value)
+    rendered = []
+    index = 0
+
+    while index < len(blocks):
+        block = blocks[index]
+        previous = blocks[index - 1] if index else ''
+        should_start_list = (
+            is_patient_list_item(block)
+            and (
+                previous.endswith(':')
+                or (
+                    index + 1 < len(blocks)
+                    and is_patient_list_item(blocks[index + 1])
+                )
+            )
+        )
+
+        if should_start_list:
+            items = []
+            while index < len(blocks) and is_patient_list_item(blocks[index]):
+                items.append(blocks[index])
+                index += 1
+            list_items = ''.join(f'<li>{conditional_escape(item)}</li>' for item in items)
+            rendered.append(f'<ul class="patient-bullet-list">{list_items}</ul>')
+            continue
+
+        paragraph = conditional_escape(block).replace('\n', '<br>')
+        rendered.append(f'<p>{paragraph}</p>')
+        index += 1
+
+    return mark_safe('\n'.join(rendered))
+
+
 def patient_page_detail_view(request, slug):
     site_settings = get_site_settings()
     patient_page = get_object_or_404(
@@ -106,12 +174,21 @@ def patient_page_detail_view(request, slug):
         is_published=True,
         category__is_published=True,
     )
+    sections = [
+        {
+            'id': section.id,
+            'title': section.title,
+            'content_html': render_patient_text(section.content),
+        }
+        for section in patient_page.sections.all()
+    ]
 
     context = {
         'page_title': patient_page.title,
         'site_settings': site_settings,
         'patient_page': patient_page,
-        'sections': patient_page.sections.all(),
+        'description_html': render_patient_text(patient_page.description),
+        'sections': sections,
         'nav_links': get_nav_links(),
         'cta_text': site_settings.cta_text if site_settings and site_settings.cta_text else 'Запись на приём',
     }
