@@ -102,8 +102,7 @@
     }
 
     .patient-detail-squircle {
-        padding-left: 18px;
-        padding-right: 18px;
+        padding: 28px 18px 40px;
     }
 
     .patient-topic {

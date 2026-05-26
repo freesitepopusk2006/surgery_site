@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load patient_text %}
 
 {% block title %}{{ patient_page.title }}{% endblock %}
 
@@ -31,7 +32,7 @@
 
             {% if patient_page.description %}
                 <section class="patient-description">
-                    {{ patient_page.description|linebreaks }}
+                    {{ patient_page.description|patient_text }}
                 </section>
             {% endif %}
 
@@ -40,7 +41,7 @@
                     <section class="patient-section" id="section-{{ section.id }}">
                         <h2>{{ section.title }}</h2>
                         <div class="patient-section-content">
-                            {{ section.content|linebreaks }}
+                            {{ section.content|patient_text }}
                         </div>
                     </section>
                 {% endfor %}
