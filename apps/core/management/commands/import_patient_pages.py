@@ -69,7 +69,7 @@ class Command(BaseCommand):
                     defaults={
                         'category': category,
                         'title': parsed['title'],
-                        'description': parsed['description'],
+                        'description': self._normalize_content(parsed['description']),
                         'order': order,
                         'is_published': True,
                         'source_url': row['source_url'],
@@ -126,15 +126,21 @@ class Command(BaseCommand):
             raise CommandError(f'Title not found in {file_path}')
 
         sections = [
-            {'title': match.group(2).strip(), 'content': match.group(3).strip()}
+            {'title': self._normalize_title(match.group(2).strip()), 'content': match.group(3).strip()}
             for match in PART_RE.finditer(text)
         ]
 
         return {
-            'title': title_match.group(1).strip(),
+            'title': self._normalize_title(title_match.group(1).strip()),
             'description': description_match.group(1).strip() if description_match else '',
             'sections': sections,
         }
+
+    def _normalize_title(self, title):
+        letters = [char for char in title if char.isalpha()]
+        if letters and all(char.isupper() for char in letters):
+            return title[:1].upper() + title[1:].lower()
+        return title
 
     def _normalize_content(self, content):
         lines = []
@@ -144,10 +150,11 @@ class Command(BaseCommand):
                 lines.append('')
                 continue
 
-            if len(stripped) < 180 and stripped.endswith(';'):
-                stripped = stripped[:-1].rstrip() + '.'
-            elif len(stripped) < 180 and stripped[-1] not in '.!?:»")':
-                stripped = stripped + '.'
+            if len(stripped) < 240:
+                if stripped[-1] in ';,':
+                    stripped = stripped[:-1].rstrip() + '.'
+                elif stripped[-1] not in '.!?:»")':
+                    stripped = stripped + '.'
 
             lines.append(stripped)
 

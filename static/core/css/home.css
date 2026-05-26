@@ -251,31 +251,29 @@
 }
 
 .patient-detail-shell {
-    padding: clamp(32px, 5vw, 72px) 0 clamp(40px, 6vw, 84px);
-}
-
-.patient-detail-heading {
-    width: min(100%, var(--container));
-    margin: 0 auto;
-    padding: 0 clamp(12px, 2vw, 24px) clamp(20px, 3vw, 32px);
-}
-
-.patient-back-link {
-    display: inline-flex;
-    margin-bottom: 14px;
-    color: var(--text-soft);
-    font-size: 0.96rem;
-}
-
-.patient-back-link:hover,
-.patient-back-link:focus-visible {
-    color: var(--text);
+    padding: clamp(28px, 4vw, 56px) 0 clamp(44px, 6vw, 84px);
 }
 
 .patient-detail-squircle {
     display: grid;
-    gap: clamp(24px, 3vw, 40px);
+    gap: clamp(28px, 4vw, 52px);
     min-height: unset;
+    padding-left: clamp(28px, 5vw, 76px);
+    padding-right: clamp(28px, 5vw, 76px);
+}
+
+.patient-detail-heading {
+    max-width: 980px;
+    width: 100%;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.patient-detail-heading h1 {
+    margin: 0;
+    font-size: clamp(2rem, 4.6vw, 4.7rem);
+    line-height: 1.04;
+    font-weight: 400;
 }
 
 .patient-detail-image {
@@ -293,15 +291,18 @@
 }
 
 .patient-toc {
+    width: min(100%, 980px);
+    margin: 0 auto;
     padding: clamp(18px, 2.5vw, 26px);
-    border: 1px solid var(--border);
+    border: 1px solid rgba(58, 126, 151, 0.28);
     border-radius: 8px;
-    background: #fff;
+    background: #f4fbfd;
 }
 
 .patient-toc h2 {
-    margin: 0 0 14px;
-    font-size: clamp(1.2rem, 2vw, 1.5rem);
+    margin: 0 0 18px;
+    color: #245f73;
+    font-size: clamp(1.35rem, 2vw, 1.7rem);
     font-weight: 400;
 }
 
@@ -314,48 +315,55 @@
 
 .patient-toc li {
     break-inside: avoid;
-    margin-bottom: 8px;
-    color: var(--text-soft);
+    margin-bottom: 12px;
+    color: #2d7890;
+    font-size: clamp(1.05rem, 1.35vw, 1.2rem);
+    line-height: 1.35;
 }
 
 .patient-toc a {
-    color: var(--text-soft);
+    color: #2d7890;
+    text-decoration-color: rgba(45, 120, 144, 0.36);
+    text-underline-offset: 4px;
 }
 
 .patient-toc a:hover,
 .patient-toc a:focus-visible {
-    color: var(--text);
+    color: #174f62;
 }
 
 .patient-description,
 .patient-section-content {
-    max-width: 920px;
+    width: min(100%, 980px);
+    margin: 0 auto;
     color: var(--text);
-    font-size: clamp(1rem, 1.25vw, 1.08rem);
-    line-height: 1.72;
+    font-size: clamp(1.08rem, 1.35vw, 1.22rem);
+    line-height: 1.82;
 }
 
 .patient-description p,
 .patient-section-content p {
-    margin: 0 0 16px;
+    margin: 0 0 20px;
 }
 
 .patient-sections {
     display: grid;
-    gap: clamp(24px, 4vw, 48px);
+    gap: clamp(32px, 5vw, 60px);
 }
 
 .patient-section {
     display: grid;
-    gap: 12px;
-    padding-top: clamp(18px, 3vw, 28px);
+    gap: 18px;
+    padding-top: clamp(24px, 4vw, 36px);
     border-top: 1px solid var(--border);
     scroll-margin-top: 96px;
 }
 
 .patient-section h2 {
     margin: 0;
-    max-width: 920px;
+    width: min(100%, 980px);
+    margin-left: auto;
+    margin-right: auto;
     font-size: clamp(1.45rem, 2.5vw, 2rem);
     font-weight: 400;
     line-height: 1.2;

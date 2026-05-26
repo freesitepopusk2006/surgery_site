@@ -4,13 +4,12 @@
 
 {% block content %}
 <article class="patient-detail-shell">
-    <div class="patient-detail-heading">
-        <a class="patient-back-link" href="{% url 'core:patients' %}">Пациентам</a>
-        <h1>{{ patient_page.title }}</h1>
-    </div>
-
     <div class="main-squircle-wrap">
         <div class="main-squircle patient-detail-squircle">
+            <div class="patient-detail-heading">
+                <h1>{{ patient_page.title }}</h1>
+            </div>
+
             <div class="patient-detail-image placeholder-block">
                 {% if patient_page.main_image %}
                     <img src="{{ patient_page.main_image.url }}" alt="{{ patient_page.title }}" loading="eager">

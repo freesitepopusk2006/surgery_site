@@ -96,8 +96,12 @@
     }
 
     .patients-heading,
-    .patient-detail-heading,
     .prices-page-heading {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .patient-detail-squircle {
         padding-left: 18px;
         padding-right: 18px;
     }
