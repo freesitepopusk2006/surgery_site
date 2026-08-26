@@ -98,17 +98,23 @@
     .patient-detail-shell .patient-section-content ul,
     .patient-detail-shell .patient-bullet-list {
         display: grid !important;
-        gap: clamp(12px, 1.5vw, 20px) !important;
-        margin: clamp(20px, 3vw, 36px) 0 clamp(34px, 4vw, 62px) !important;
+        gap: clamp(8px, 1vw, 14px) !important;
+        margin: clamp(10px, 1.4vw, 18px) 0 clamp(22px, 2.6vw, 34px) !important;
         padding: 0 !important;
         list-style: none !important;
+        color: var(--text-soft) !important;
+        font-size: clamp(1.04rem, 1.18vw, 1.14rem) !important;
+        line-height: 1.75 !important;
     }
 
     .patient-detail-shell .patient-description li,
     .patient-detail-shell .patient-section-content li,
     .patient-detail-shell .patient-bullet-list li {
         position: relative !important;
-        padding-left: 38px !important;
+        padding-left: 24px !important;
+        max-width: 100% !important;
+        font-size: inherit !important;
+        line-height: inherit !important;
     }
 
     .patient-detail-shell .patient-description li::before,
@@ -117,9 +123,9 @@
         content: "\2022" !important;
         position: absolute !important;
         left: 0 !important;
-        top: 0.02em !important;
+        top: 0.54em !important;
         color: #2d7890 !important;
-        font-size: 1.45em !important;
+        font-size: 0.58em !important;
         line-height: 1 !important;
     }
 
