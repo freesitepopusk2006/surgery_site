@@ -13,6 +13,7 @@ CONTACT_TELEGRAM_URL = 'https://t.me/Opht_KutinIM'
 CONTACT_WHATSAPP_URL = 'https://wa.me/74993943452'
 CONTACT_MAX_URL = 'https://max.ru/u/f9LHodD0cOLrvB0ibZk95T51QLuO4dRf1jeg-4mAenQNMPsj4h0MNExk0QA'
 LIST_ITEM_MAX_LENGTH = 240
+SHOW_CASES_ON_HOME = False
 
 
 def get_contact_context(site_settings):
@@ -36,7 +37,7 @@ def home_view(request):
     site_settings = get_site_settings()
     homepage = HomePage.objects.order_by('-created_at').first()
 
-    cases = Case.objects.filter(is_published=True)[:5]
+    cases = Case.objects.filter(is_published=True)[:5] if SHOW_CASES_ON_HOME else []
     price_items = PriceItem.objects.filter(is_active=True)
     reviews = Review.objects.filter(is_published=True, show_on_home=True)[:6]
 
@@ -44,6 +45,7 @@ def home_view(request):
         'page_title': 'Главная',
         'site_settings': site_settings,
         'homepage': homepage,
+        'show_cases': SHOW_CASES_ON_HOME,
         'cases': cases,
         'price_items': price_items,
         'reviews': reviews,
