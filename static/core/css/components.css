@@ -133,12 +133,12 @@
     font-weight: 300;
     padding: 9px 16px;
     border: 1px solid rgba(29, 29, 31, 0.1);
-    border-radius: 8px;
+    border-radius: var(--radius-pill);
     background: rgba(255, 255, 255, 0.58);
 }
 
 .header-cta {
-    border-radius: 8px;
+    border-radius: var(--radius-pill);
     padding: 9px 16px;
     background: #1d1d1f;
     color: #ffffff;
