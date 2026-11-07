@@ -145,18 +145,27 @@ class SiteSettingsAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
     def change_view(self, request, object_id, form_url='', extra_context=None):
         site = self.get_object(request, object_id)
         if site and self.has_change_permission(request, site):
+            from .notifications import uses_simple_mail
+            simple_mail = uses_simple_mail()
             checks = [
                 ('Приём заявок включён', site.booking_enabled),
                 ('Почта получателя сохранена', bool(site.notification_email)),
-                ('Ключ Resend задан на сервере', bool(settings.RESEND_API_KEY)),
-                ('Адрес отправителя задан на сервере', bool(settings.DEFAULT_FROM_EMAIL)),
+            ]
+            if not simple_mail:
+                checks.extend([
+                    ('Ключ Resend задан на сервере', bool(settings.RESEND_API_KEY)),
+                    ('Адрес отправителя задан на сервере', bool(settings.DEFAULT_FROM_EMAIL)),
+                ])
+            checks.extend([
                 ('Политика опубликована или указана внешняя ссылка', bool(site.privacy_policy_url)
                  or SitePage.objects.filter(slug='privacy', is_published=True).exists()),
                 ('Согласие опубликовано (slug: consent)',
                  SitePage.objects.filter(slug='consent', is_published=True).exists()),
-            ]
+            ])
             extra_context = {**(extra_context or {}), 'booking_checks': checks,
-                'mail_test_ready': bool(site.notification_email and settings.RESEND_API_KEY and settings.DEFAULT_FROM_EMAIL),
+                'simple_mail': simple_mail,
+                'mail_test_ready': bool(site.notification_email and
+                    (simple_mail or (settings.RESEND_API_KEY and settings.DEFAULT_FROM_EMAIL))),
                 'saved_notification_email': site.notification_email,
                 'test_email_url': reverse('admin:core_sitesettings_test_email', args=[site.pk])}
         return super().change_view(request, object_id, form_url, extra_context)
@@ -168,11 +177,13 @@ class SiteSettingsAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
             raise Http404
         if not self.has_change_permission(request, site):
             raise PermissionDenied
-        from .notifications import send_test_notification
-        status, error = send_test_notification(site)
+        from .notifications import send_test_notification, uses_simple_mail
+        status, error = send_test_notification(site, site_url=request.build_absolute_uri('/'))
         if status == BookingRequest.Notification.SENT:
-            self.message_user(request, f'Почтовый сервис принял тестовое письмо для {site.notification_email}. '
-                              'Проверьте входящие и спам.', level=messages.SUCCESS)
+            text = f'Почтовый сервис принял тестовое письмо для {site.notification_email}. Проверьте входящие и спам.'
+            if uses_simple_mail():
+                text += ' При первом подключении откройте письмо от FormSubmit и нажмите кнопку подтверждения адреса.'
+            self.message_user(request, text, level=messages.SUCCESS)
         else:
             self.message_user(request, error, level=messages.ERROR)
         return redirect(reverse('admin:core_sitesettings_change', args=[site.pk]))
@@ -423,7 +434,7 @@ class BookingRequestAdmin(EditorialAdminMixin, admin.ModelAdmin):
         from .notifications import notify_booking
         count = 0
         for booking in queryset.exclude(notification_status=BookingRequest.Notification.SENT)[:20]:
-            notify_booking(booking)
+            notify_booking(booking, site_url=request.build_absolute_uri('/'))
             count += 1
         self.message_user(request, f'Обработано уведомлений: {count}. Результат указан в колонке «Уведомление».')
 

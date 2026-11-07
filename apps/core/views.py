@@ -138,7 +138,7 @@ def booking_view(request):
         consent_document=consent.get_absolute_url(), throttle_key=throttle,
     )
     # The request is durable before attempting an external notification.
-    notify_booking(booking)
+    notify_booking(booking, site_url=request.build_absolute_uri('/'))
     return JsonResponse({'ok': True}, status=201)
 
 

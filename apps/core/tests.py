@@ -214,7 +214,7 @@ class BookingTests(TestCase):
         self.payload = {'name': 'Тестовое имя', 'phone': '8 (900) 123-45-67', 'consent': 'on', 'website': ''}
 
     def test_saves_before_notification_and_normalizes_phone(self):
-        def notification(booking):
+        def notification(booking, **kwargs):
             self.assertTrue(BookingRequest.objects.filter(pk=booking.pk).exists())
         with patch('apps.core.views.notify_booking', side_effect=notification) as notify:
             response = self.client.post('/booking/', self.payload)
@@ -270,6 +270,8 @@ class BookingTests(TestCase):
 
     @override_settings(RESEND_API_KEY='', DEFAULT_FROM_EMAIL='')
     def test_unconfigured_mail_is_visible_to_admin(self):
+        self.site.notification_email = ''
+        self.site.save()
         self.client.post('/booking/', self.payload)
         self.assertEqual(BookingRequest.objects.get().notification_status, BookingRequest.Notification.UNCONFIGURED)
 
@@ -362,7 +364,7 @@ class MailSetupTests(TestCase):
             self.assertEqual(self.client.post(self.url).status_code, 403)
             send.assert_not_called()
 
-    @override_settings(RESEND_API_KEY='')
+    @override_settings(DEFAULT_FROM_EMAIL='')
     def test_missing_server_configuration_does_not_attempt_delivery(self):
         with patch('apps.core.notifications.urlopen') as send:
             response = self.client.post(self.url, follow=True)
@@ -398,6 +400,77 @@ class MailSetupTests(TestCase):
             SiteSettings.objects.filter(pk=self.site.pk).update(notification_email='new@example.com')
             notify_booking(booking)
             self.assertNotEqual(send.call_args.args[0].get_header('Idempotency-key'), first)
+
+
+@override_settings(RESEND_API_KEY='', DEFAULT_FROM_EMAIL='')
+class SimpleMailTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.site = SiteSettings.objects.create(notification_email='owner@example.com')
+        cls.user = get_user_model().objects.create_superuser(username='simple-mail-admin', password='test-only-password')
+        SitePage.objects.create(title='Политика', slug='privacy', body='Тест', is_published=True)
+        SitePage.objects.create(title='Согласие', slug='consent', body='Тест', is_published=True)
+
+    def setUp(self):
+        self.client.force_login(self.user)
+        response = Mock(status=200)
+        response.read.return_value = b'{"success":"true","message":"Submitted"}'
+        context = Mock()
+        context.__enter__ = Mock(return_value=response)
+        context.__exit__ = Mock(return_value=False)
+        self.provider_response = response
+        patcher = patch('apps.core.notifications.urlopen', return_value=context)
+        self.send = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_admin_offers_test_without_api_keys(self):
+        response = self.client.get(reverse('admin:core_sitesettings_change', args=[self.site.pk]))
+        self.assertContains(response, 'Отправка без регистрации')
+        self.assertContains(response, 'Отправить тестовое письмо')
+        self.assertNotContains(response, 'Ключ Resend задан на сервере')
+
+    def test_test_send_explains_activation_without_creating_a_lead(self):
+        response = self.client.post(reverse('admin:core_sitesettings_test_email', args=[self.site.pk]), follow=True)
+        self.assertContains(response, 'нажмите кнопку подтверждения адреса')
+        request = self.send.call_args.args[0]
+        self.assertEqual(request.full_url, 'https://formsubmit.co/ajax/owner@example.com')
+        self.assertEqual(json.loads(request.data)['_url'], 'http://testserver/')
+        self.assertIsNone(request.get_header('Authorization'))
+        self.assertFalse(BookingRequest.objects.exists())
+
+    def test_booking_is_saved_and_alert_contains_admin_link_without_patient_data(self):
+        response = self.client.post('/booking/', {'name': 'Тестовый пациент', 'phone': '89001234567', 'consent': 'on'})
+        self.assertEqual(response.status_code, 201)
+        booking = BookingRequest.objects.get()
+        self.assertEqual(booking.notification_status, BookingRequest.Notification.SENT)
+        message = json.loads(self.send.call_args.args[0].data)['message']
+        self.assertIn(f'http://testserver/admin/core/bookingrequest/{booking.pk}/change/', message)
+        self.assertNotIn(booking.name, message)
+        self.assertNotIn(booking.phone, message)
+        self.assertNotContains(self.client.get('/'), 'owner@example.com')
+
+    def test_rejected_or_malformed_responses_are_not_reported_as_success(self):
+        for body in [b'{"success":false}', b'{"success":"false"}', b'{}', b'[]', b'not-json']:
+            with self.subTest(body=body):
+                self.provider_response.read.return_value = body
+                status, error = send_test_notification(self.site)
+                self.assertEqual(status, BookingRequest.Notification.FAILED)
+                self.assertTrue(error)
+        self.provider_response.read.return_value = b'{"success":true}'
+        self.assertEqual(send_test_notification(self.site)[0], BookingRequest.Notification.SENT)
+
+    def test_network_error_does_not_lose_lead(self):
+        self.send.side_effect = URLError('test failure')
+        response = self.client.post('/booking/', {'name': 'Тестовый пациент', 'phone': '89001234567', 'consent': 'on'})
+        self.assertEqual(response.status_code, 201)
+        booking = BookingRequest.objects.get()
+        self.assertEqual(booking.notification_status, BookingRequest.Notification.FAILED)
+        self.assertIn('FormSubmit', booking.notification_error)
+
+    def test_no_recipient_does_not_contact_provider(self):
+        self.site.notification_email = ''
+        self.assertEqual(send_test_notification(self.site)[0], BookingRequest.Notification.UNCONFIGURED)
+        self.send.assert_not_called()
 
 
 class ContentFormattingTests(TestCase):

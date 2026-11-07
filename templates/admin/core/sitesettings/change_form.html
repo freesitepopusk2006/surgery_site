@@ -4,6 +4,12 @@
   {% if booking_checks %}
     <section class="module booking-setup" aria-labelledby="bookingSetupTitle">
       <h2 id="bookingSetupTitle">Готовность заявок и почты</h2>
+      {% if simple_mail %}
+        <p><strong>Отправка без регистрации — FormSubmit.</strong> Укажите почту ниже и сохраните настройки.
+          Затем нажмите «Отправить тестовое письмо» и подтвердите адрес в письме от FormSubmit.
+          Проверьте папку «Спам», если письмо не видно.</p>
+        <p>В уведомлении будет номер заявки и ссылка на неё. Имя и телефон доступны в админке после входа.</p>
+      {% endif %}
       <ul class="booking-checks">
         {% for label, ready in booking_checks %}
           <li><strong>{% if ready %}Готово{% else %}Нужно настроить{% endif %}</strong> — {{ label }}</li>
@@ -17,7 +23,11 @@
           <button type="submit" class="button">Отправить тестовое письмо</button>
         </form>
       {% else %}
-        <p>Для тестового письма нужны получатель, RESEND_API_KEY и DEFAULT_FROM_EMAIL. Секретный ключ задаётся на сервере.</p>
+        {% if simple_mail %}
+          <p>Для тестового письма укажите почту получателя и сохраните настройки.</p>
+        {% else %}
+          <p>Для тестового письма нужны получатель, RESEND_API_KEY и DEFAULT_FROM_EMAIL. Секретный ключ задаётся на сервере.</p>
+        {% endif %}
       {% endif %}
       <p>Тест не создаёт заявку. Приём письма сервисом не подтверждает попадание во входящие — проверьте почтовый ящик.</p>
     </section>
