@@ -1,0 +1,9 @@
+{% extends "admin/base_site.html" %}
+{% block extrahead %}{{ block.super }}{{ media }}{% endblock %}
+{% block content %}
+  <p>Выберите дни и часы. Окна будут созданы на семь дней с выбранной даты. Существующие окна и брони не изменятся.</p>
+  <form method="post">{% csrf_token %}
+    <fieldset class="module aligned">{{ form.as_p }}</fieldset>
+    <div class="submit-row"><input type="submit" class="default" value="Создать расписание"></div>
+  </form>
+{% endblock %}

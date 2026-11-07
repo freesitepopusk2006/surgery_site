@@ -1,9 +1,11 @@
-<dialog class="booking-dialog" id="bookingDialog" aria-labelledby="bookingTitle">
+<dialog class="booking-dialog{% if schedule_available %} schedule-dialog{% endif %}" id="bookingDialog" aria-labelledby="bookingTitle">
   <div class="booking-sheet">
     <button class="close-button" type="button" data-booking-close aria-label="Закрыть форму"><span></span><span></span></button>
-    <span class="eyebrow">Обратная связь</span>
-    <h2 id="bookingTitle">{{ site_settings.booking_title }}</h2>
-    {% if booking_available %}
+    <span class="eyebrow">{% if schedule_available %}Консультация · по предварительной записи{% else %}Обратная связь{% endif %}</span>
+    <h2 id="bookingTitle" tabindex="-1">{% if schedule_available %}{{ site_settings.schedule_title }}{% else %}{{ site_settings.booking_title }}{% endif %}</h2>
+    {% if schedule_available %}
+      {% include 'core/includes/scheduler.html' %}
+    {% elif booking_available %}
       <div id="bookingFormWrap">
         {% if site_settings.booking_intro %}<p class="booking-intro">{{ site_settings.booking_intro|linebreaksbr }}</p>{% endif %}
         <form method="post" action="{% url 'core:booking' %}" id="bookingForm" class="booking-form">

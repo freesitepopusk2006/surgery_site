@@ -8,6 +8,7 @@ from urllib.request import Request, urlopen
 
 from django.conf import settings
 from django.urls import reverse
+from django.utils import timezone
 
 from .models import BookingRequest, SiteSettings
 
@@ -102,10 +103,21 @@ def notify_booking(booking, *, site_url=''):
     site = SiteSettings.objects.order_by('pk').first()
     admin_path = reverse('admin:core_bookingrequest_change', args=[booking.pk])
     admin_url = urljoin(site_url, admin_path) if site_url else admin_path
+    subject = f'Новая заявка на приём #{booking.pk}'
+    text = (f'На сайте сохранена новая заявка #{booking.pk}.\n'
+            f'Посмотреть имя и телефон в админке: {admin_url}\n'
+            'Для просмотра войдите в учётную запись администратора.')
+    if booking.slot_id:
+        start = timezone.localtime(booking.appointment_start)
+        subject = f'{"Демо · " if booking.is_demo else ""}Бронь №{booking.pk} · {start:%d.%m, %H:%M}'
+        text = (f'БРОНЬ №{booking.pk} — ОЖИДАЕТ ПОДТВЕРЖДЕНИЯ\n'
+            + ('Демонстрационная запись. Реального приёма не будет.\n' if booking.is_demo else '')
+            + f'\nУслуга: {booking.appointment_service}\nДата: {start:%d.%m.%Y}\n'
+              f'Время: {start:%H:%M} (Москва, UTC+3)\nДлительность: {booking.appointment_duration} минут\n'
+              f'\nФИО: {booking.name}\nТелефон: {booking.phone}\nПочта: {booking.email}\n'
+              f'\nПодтвердить или отменить после входа в админку:\n{admin_url}\n'
+              '\nДо решения администратора это время недоступно для других записей.')
     booking.notification_status, booking.notification_error = send_notification(site,
-        f'Новая заявка на приём #{booking.pk}',
-        f'На сайте сохранена новая заявка #{booking.pk}.\n'
-        f'Посмотреть имя и телефон в админке: {admin_url}\n'
-        'Для просмотра войдите в учётную запись администратора.', f'booking/{booking.pk}', site_url=site_url)
+        subject, text, f'booking/{booking.pk}', site_url=site_url)
     booking.save(update_fields=['notification_status', 'notification_error'])
     return booking.notification_status

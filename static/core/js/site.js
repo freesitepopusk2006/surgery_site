@@ -49,7 +49,8 @@
       returnFocus = button;
       dialog.showModal();
       document.body.classList.add('is-modal-open');
-      const focusTarget = dialog.querySelector('input[name="name"]') || dialog.querySelector('[data-booking-close]');
+      dialog.dispatchEvent(new CustomEvent('booking:open'));
+      const focusTarget = dialog.querySelector('[data-scheduler]') ? document.getElementById('bookingTitle') : dialog.querySelector('input[name="name"]') || dialog.querySelector('[data-booking-close]');
       focusTarget?.focus({preventScroll: true});
     });
   });
@@ -60,11 +61,13 @@
     if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close();
   });
   dialog?.addEventListener('close', () => {
+    if (dialog.open) return;
     document.body.classList.remove('is-modal-open');
     if (success && !success.hidden) {
       form?.reset(); success.hidden = true; formWrap.hidden = false;
     }
     if (returnFocus?.getClientRects().length) returnFocus.focus({preventScroll: true});
+    dialog.dispatchEvent(new CustomEvent('booking:close'));
   });
   form?.addEventListener('submit', async event => {
     event.preventDefault();
@@ -88,6 +91,10 @@
       });
       const data = await response.json();
       if (!response.ok || !data.ok) {
+        if (data.conflict) {
+          dialog.dispatchEvent(new CustomEvent('booking:conflict', {detail: data}));
+          return;
+        }
         if (data.errors) {
           for (const [name, message] of Object.entries(data.errors)) {
             const error = form.querySelector(`[data-error-for="${name}"]`);
@@ -104,6 +111,7 @@
       }
       formWrap.hidden = true;
       success.hidden = false;
+      dialog.dispatchEvent(new CustomEvent('booking:saved', {detail: data}));
       success.querySelector('[data-booking-close]')?.focus();
     } catch {
       formError.textContent = 'Не удалось подтвердить отправку. Проверьте соединение и попробуйте ещё раз.';

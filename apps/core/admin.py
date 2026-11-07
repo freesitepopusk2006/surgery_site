@@ -2,6 +2,11 @@ from django.contrib import admin, messages
 from django import forms
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.db.models import OuterRef, Subquery
+from django.utils import timezone
+from datetime import timedelta
 from django.http import Http404
 from django.utils.html import format_html
 from django.shortcuts import redirect
@@ -17,8 +22,10 @@ from .models import (
     PatientCategory,
     PatientPage,
     PatientPageSection,
-    Direction, ProcessStep, Qualification, PriceCategory, SitePage, BookingRequest, DoctorFact, FAQItem,
+    Direction, ProcessStep, Qualification, PriceCategory, SitePage, BookingRequest, DoctorFact, FAQItem, AppointmentSlot,
 )
+from .forms import SlotGenerationForm
+from django.template.response import TemplateResponse
 
 
 class ExistingImageFormMixin:
@@ -129,6 +136,11 @@ class SiteSettingsAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
             'fields': ('booking_enabled', 'notification_email', 'booking_title', 'booking_intro', 'booking_success_text'),
             'description': 'Для формы опубликуйте документы privacy и consent в разделе «Документы». '
                            'Внешнюю политику можно указать ниже. Заявки сохраняются независимо от доставки письма.'
+        }),
+        ('Расписание и бронирование', {
+            'fields': ('schedule_enabled', 'schedule_title', 'schedule_intro'),
+            'description': 'Окна создаются в разделе «Расписание приёма», по одному или сразу на неделю. '
+                           'Демонстрационные окна явно помечены и не являются реальным приёмом.'
         }),
         ('Внутренние страницы', {
             'fields': ('patients_title', 'patients_intro', 'prices_intro', 'prices_note'), 'classes': ('collapse',)
@@ -415,19 +427,65 @@ class SitePageAdmin(EditorialAdminMixin, admin.ModelAdmin):
 
 @admin.register(BookingRequest)
 class BookingRequestAdmin(EditorialAdminMixin, admin.ModelAdmin):
-    actions = ('retry_notification',)
-    list_display = ('id', 'created_at', 'name', 'phone', 'status', 'notification_status')
-    list_editable = ('status',)
-    list_filter = ('status', 'notification_status', 'created_at')
-    search_fields = ('name', 'phone')
+    actions = ('confirm_bookings', 'cancel_bookings', 'retry_notification')
+    list_display = ('id', 'created_at', 'name', 'appointment_start', 'email', 'phone', 'status', 'is_demo', 'notification_status')
+    list_filter = ('status', 'is_demo', 'notification_status', 'created_at')
+    search_fields = ('name', 'phone', 'email')
+    list_select_related = ('slot',)
     date_hierarchy = 'created_at'
-    readonly_fields = ('created_at', 'name', 'phone', 'consent', 'consent_document',
+    readonly_fields = ('created_at', 'name', 'email', 'phone', 'slot', 'appointment_start', 'appointment_duration',
+                       'appointment_service', 'is_demo', 'status', 'consent', 'consent_document',
                        'notification_status', 'notification_error')
-    fields = ('created_at', 'name', 'phone', 'consent', 'consent_document', 'status', 'note',
+    fields = ('created_at', 'name', 'email', 'phone', 'slot', 'appointment_start', 'appointment_duration',
+              'appointment_service', 'is_demo', 'consent', 'consent_document', 'status', 'note',
               'notification_status', 'notification_error')
+    change_form_template = 'admin/core/bookingrequest/change_form.html'
 
     def has_add_permission(self, request):
         return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_urls(self):
+        return [path('<int:object_id>/decision/<str:decision>/', self.admin_site.admin_view(self.decision_view),
+                     name='core_bookingrequest_decision')] + super().get_urls()
+
+    @method_decorator(require_POST)
+    def decision_view(self, request, object_id, decision):
+        booking = self.get_object(request, str(object_id))
+        if not booking:
+            raise Http404
+        if not self.has_change_permission(request, booking):
+            raise PermissionDenied
+        queryset = self.get_queryset(request).filter(pk=booking.pk)
+        if decision == 'confirm':
+            self.confirm_bookings(request, queryset)
+        elif decision == 'cancel':
+            self.cancel_bookings(request, queryset)
+        else:
+            raise Http404
+        return redirect(reverse('admin:core_bookingrequest_change', args=[booking.pk]))
+
+    @admin.action(description='Подтвердить выбранные брони', permissions=['change'])
+    def confirm_bookings(self, request, queryset):
+        count = 0
+        for booking in queryset.filter(slot__isnull=False, status__in=['new', 'contacted']):
+            changed = BookingRequest.objects.filter(pk=booking.pk, status__in=['new', 'contacted']).update(status='confirmed')
+            if changed:
+                self.log_change(request, booking, 'Бронь подтверждена администратором.')
+                count += 1
+        self.message_user(request, f'Подтверждено броней: {count}. Время остаётся занятым.')
+
+    @admin.action(description='Отменить и освободить время', permissions=['change'])
+    def cancel_bookings(self, request, queryset):
+        count = 0
+        for booking in queryset.exclude(status='cancelled'):
+            changed = BookingRequest.objects.filter(pk=booking.pk).exclude(status='cancelled').update(status='cancelled')
+            if changed:
+                self.log_change(request, booking, 'Бронь отменена, время освобождено.')
+                count += 1
+        self.message_user(request, f'Отменено заявок: {count}. Опубликованные будущие окна снова доступны, если не закрыты вручную.')
 
     @admin.action(description='Повторить почтовое уведомление', permissions=['change'])
     def retry_notification(self, request, queryset):
@@ -437,6 +495,83 @@ class BookingRequestAdmin(EditorialAdminMixin, admin.ModelAdmin):
             notify_booking(booking, site_url=request.build_absolute_uri('/'))
             count += 1
         self.message_user(request, f'Обработано уведомлений: {count}. Результат указан в колонке «Уведомление».')
+
+
+@admin.register(AppointmentSlot)
+class AppointmentSlotAdmin(EditorialAdminMixin, admin.ModelAdmin):
+    change_list_template = 'admin/core/appointmentslot/change_list.html'
+    list_display = ('starts_at', 'service', 'duration_minutes', 'availability', 'reservation', 'is_demo', 'is_published', 'is_blocked')
+    list_editable = ('is_published', 'is_blocked')
+    list_filter = ('is_demo', 'is_published', 'is_blocked', 'starts_at')
+    search_fields = ('service', 'note')
+    date_hierarchy = 'starts_at'
+    fields = ('service', 'starts_at', 'duration_minutes', 'is_demo', 'is_published', 'is_blocked', 'note')
+    actions = ('close_slots', 'open_slots')
+
+    def get_queryset(self, request):
+        active = BookingRequest.objects.filter(slot_id=OuterRef('pk')).exclude(status='cancelled')
+        return super().get_queryset(request).annotate(active_booking_id=Subquery(active.values('pk')[:1]))
+
+    @admin.display(description='Состояние')
+    def availability(self, obj):
+        if obj.active_booking_id:
+            return 'Занято'
+        if not obj.is_published:
+            return 'Не опубликовано'
+        if obj.is_blocked:
+            return 'Закрыто'
+        return 'Прошедшее время' if obj.starts_at <= timezone.now() else 'Свободно'
+
+    @admin.display(description='Бронь')
+    def reservation(self, obj):
+        if not obj.active_booking_id:
+            return '—'
+        return format_html('<a href="{}">Заявка №{}</a>',
+            reverse('admin:core_bookingrequest_change', args=[obj.active_booking_id]), obj.active_booking_id)
+
+    @admin.action(description='Закрыть для новых записей', permissions=['change'])
+    def close_slots(self, request, queryset):
+        count = queryset.update(is_blocked=True)
+        self.message_user(request, f'Закрыто окон: {count}. Существующие брони сохранены.')
+
+    @admin.action(description='Открыть для новых записей', permissions=['change'])
+    def open_slots(self, request, queryset):
+        count = queryset.update(is_blocked=False)
+        self.message_user(request, f'Открыто окон: {count}. Занятые окна останутся недоступными.')
+
+    def get_urls(self):
+        return [path('generate/', self.admin_site.admin_view(self.generate_view),
+                     name='core_appointmentslot_generate')] + super().get_urls()
+
+    def generate_view(self, request):
+        if not self.has_add_permission(request):
+            raise PermissionDenied
+        today = timezone.localdate()
+        next_monday = today + timedelta(days=7 - today.weekday())
+        form = SlotGenerationForm(request.POST if request.method == 'POST' else None,
+                                  initial={'start_date': next_monday})
+        if request.method == 'POST' and form.is_valid():
+            count = skipped = 0
+            try:
+                with transaction.atomic():
+                    for values in form.slot_values():
+                        if AppointmentSlot.objects.filter(starts_at=values['starts_at']).exists():
+                            skipped += 1
+                            continue
+                        slot = AppointmentSlot(**values)
+                        slot.full_clean()
+                        slot.save()
+                        self.log_addition(request, slot, 'Создано через форму расписания на неделю.')
+                        count += 1
+            except ValidationError as exc:
+                form.add_error(None, 'Не удалось создать расписание: ' + '; '.join(exc.messages))
+            else:
+                self.message_user(request, f'Создано окон: {count}. Уже существовавшие окна пропущены: {skipped}.')
+                return redirect(reverse('admin:core_appointmentslot_changelist'))
+        return TemplateResponse(request, 'admin/core/appointmentslot/generate.html', {
+            **self.admin_site.each_context(request), 'opts': self.model._meta,
+            'title': 'Создать расписание на неделю', 'form': form, 'media': self.media + form.media,
+        })
 
 
 admin.site.site_header = 'Управление сайтом'

@@ -1,0 +1,39 @@
+<div id="bookingFormWrap" data-scheduler data-slots-url="{% url 'core:appointment_slots' %}">
+  {% if site_settings.schedule_intro %}<p class="booking-intro schedule-intro">{{ site_settings.schedule_intro|linebreaksbr }}</p>{% endif %}
+  <div class="schedule-progress" aria-label="Шаги записи"><span id="scheduleStepOne" aria-current="step">01 <span>Выберите время</span></span><span id="scheduleStepTwo">02 <span>Ваши данные</span></span></div>
+  <div id="scheduleChoice">
+    <div class="schedule-heading">
+      <div><h3 id="scheduleWeekLabel">Ближайшая неделя</h3><p>Время московское · UTC+3</p></div>
+      <div class="schedule-nav"><button type="button" data-week-previous aria-label="Предыдущая неделя" disabled>←</button><button type="button" data-week-next aria-label="Следующая неделя" disabled>→</button></div>
+    </div>
+    <p class="schedule-demo" id="scheduleDemoNotice" hidden>Демонстрационное расписание. Эти окна созданы для проверки записи; реального приёма не будет.</p>
+    <p id="scheduleStatus" class="schedule-status" role="status" aria-live="polite">Загружаем свободное время…</p>
+    <button type="button" class="text-link" id="scheduleRetry" hidden>Обновить расписание <span aria-hidden="true">↻</span></button>
+    <div class="schedule-day-tabs" id="scheduleDayTabs" aria-label="Дни недели"></div>
+    <div class="schedule-grid" id="scheduleGrid" aria-label="Время консультаций"></div>
+    <div class="schedule-selection">
+      <div><span class="eyebrow">Ваш выбор</span><p id="scheduleSelectedLabel">Выберите свободное окно</p><small id="scheduleSelectedService">Время закрепится после отправки данных</small></div>
+      <button class="button" type="button" id="scheduleContinue" disabled>Забронировать время <span aria-hidden="true">↗</span></button>
+    </div>
+  </div>
+  <div id="scheduleDetails" hidden>
+    <button type="button" class="text-link" id="scheduleBack">← Изменить время</button>
+    <div class="schedule-details-grid">
+      <aside class="schedule-summary"><span class="eyebrow">Ваша консультация</span><h3 id="scheduleDetailsService"></h3><p id="scheduleDetailsTime"></p><p id="scheduleDetailsDuration"></p>{% if site_settings.clinic_name %}<p>{{ site_settings.clinic_name }}</p>{% endif %}{% if site_settings.address %}<p class="schedule-address">{{ site_settings.address }}</p>{% endif %}<p class="schedule-demo" id="scheduleDetailsDemo" hidden>Демонстрационная бронь. Реального приёма не будет.</p><p class="schedule-pending">После отправки время будет занято для других посетителей. Администратор проверит и подтвердит запись.</p></aside>
+      <form method="post" action="{% url 'core:appointment_booking' %}" id="bookingForm" class="booking-form schedule-form">
+        {% csrf_token %}<input type="hidden" name="slot" id="bookingSlot">
+        <label class="field" for="bookingName"><span>ФИО</span><input id="bookingName" name="name" autocomplete="name" minlength="2" maxlength="120" required placeholder="Фамилия, имя, отчество"><span class="field-error" data-error-for="name"></span></label>
+        <div class="schedule-contact-fields">
+          <label class="field" for="bookingEmail"><span>Электронная почта</span><input id="bookingEmail" name="email" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.ru"><span class="field-error" data-error-for="email"></span></label>
+          <label class="field" for="bookingPhone"><span>Телефон</span><input id="bookingPhone" name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="40" required placeholder="+7 (___) ___-__-__"><span class="field-error" data-error-for="phone"></span></label>
+        </div>
+        <div class="honeypot" aria-hidden="true"><label>Сайт<input name="website" tabindex="-1" autocomplete="off"></label></div>
+        <div><label class="consent-field"><input type="checkbox" name="consent" required><span>Согласен на сохранение указанных данных и отправку уведомления администратору для обработки брони.{% if consent_url and privacy_url %} Ознакомлен с <a href="{{ consent_url }}" target="_blank" rel="noopener">согласием</a> и <a href="{{ privacy_url }}" target="_blank" rel="noopener">политикой конфиденциальности</a>.{% endif %}<span id="scheduleDemoConsent" hidden> Понимаю, что это демонстрационная запись.</span></span></label><span class="field-error" data-error-for="consent"></span></div>
+        <p class="form-message" id="bookingError" role="alert" hidden></p>
+        <button class="button button-full" type="submit" id="bookingSubmit">Забронировать консультацию <span aria-hidden="true">↗</span></button>
+        <p class="schedule-form-note">Это запрос на бронь. Окончательное время приёма подтверждает администратор.</p>
+      </form>
+    </div>
+  </div>
+</div>
+<div id="bookingSuccess" class="booking-success schedule-success" role="status" hidden><span class="success-mark" aria-hidden="true">✓</span><h3>Время забронировано</h3><p id="scheduleSuccessText"></p><p id="scheduleSuccessDemo" class="schedule-demo" hidden>Демонстрационная бронь. Реального приёма не будет.</p><button class="button" type="button" data-booking-close>Готово <span aria-hidden="true">↗</span></button></div>

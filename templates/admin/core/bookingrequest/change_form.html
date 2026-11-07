@@ -1,0 +1,17 @@
+{% extends "admin/change_form.html" %}
+{% block content %}
+  {% if original and has_change_permission %}
+    <section class="module booking-setup">
+      <h2>Управление бронью</h2>
+      {% if original.slot_id %}<p>{{ original.appointment_service }} · {{ original.appointment_start|date:"d.m.Y H:i" }} · {{ original.appointment_duration }} минут. Время московское.</p>{% endif %}
+      {% if original.is_demo %}<p><strong>Демонстрационная запись. Реального приёма не будет.</strong></p>{% endif %}
+      {% if original.status == 'new' or original.status == 'contacted' %}
+        {% if original.slot_id %}<form method="post" action="{% url 'admin:core_bookingrequest_decision' original.pk 'confirm' %}">{% csrf_token %}<button type="submit" class="button">Подтвердить бронь</button></form>{% endif %}
+      {% endif %}
+      {% if original.status != 'cancelled' %}
+        <form method="post" action="{% url 'admin:core_bookingrequest_decision' original.pk 'cancel' %}">{% csrf_token %}<p>При отмене окно снова станет доступным для записи, если оно опубликовано и не закрыто вручную.</p><button type="submit" class="button">Отменить и освободить время</button></form>
+      {% else %}<p>Бронь отменена. История сохранена; повторная запись оформляется как новая бронь.</p>{% endif %}
+    </section>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

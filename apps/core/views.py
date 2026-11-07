@@ -4,6 +4,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.db.models import Prefetch, Q
+from django.db import IntegrityError, OperationalError
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -14,7 +15,8 @@ from django.core.exceptions import SuspiciousFileOperation
 from django.views.decorators.http import require_POST
 
 from .content import render_content
-from .forms import BookingForm
+from .forms import BookingForm, AppointmentBookingForm
+from .appointments import SlotUnavailable, reserve_slot, schedule_data
 from .models import (
     BookingRequest, Case, Direction, HomePage, PatientCategory, PatientPage, DoctorFact, FAQItem,
     PriceCategory, PriceItem, ProcessStep, Qualification, Review, SitePage, SiteSettings,
@@ -140,6 +142,50 @@ def booking_view(request):
     # The request is durable before attempting an external notification.
     notify_booking(booking, site_url=request.build_absolute_uri('/'))
     return JsonResponse({'ok': True}, status=201)
+
+
+def appointment_slots_view(request):
+    site = SiteSettings.objects.order_by('pk').first()
+    if not site or not site.booking_enabled or not site.schedule_enabled:
+        return JsonResponse({'error': 'Расписание пока недоступно.'}, status=503)
+    try:
+        result = schedule_data(site, request.GET.get('week'))
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Выберите неделю в пределах ближайших трёх месяцев.'}, status=400)
+    response = JsonResponse(result)
+    response['Cache-Control'] = 'no-store'
+    return response
+
+
+@require_POST
+def appointment_booking_view(request):
+    if len(request.body) > 8192:
+        return JsonResponse({'ok': False, 'error': 'Слишком большой запрос.'}, status=413)
+    site = SiteSettings.objects.order_by('pk').first()
+    if not site or not site.booking_enabled or not site.schedule_enabled:
+        return JsonResponse({'ok': False, 'error': 'Запись пока недоступна.'}, status=503)
+    form = AppointmentBookingForm(request.POST)
+    if not form.is_valid():
+        messages = {'name': 'Укажите ФИО.', 'phone': 'Проверьте номер телефона.',
+            'email': 'Укажите корректную почту.', 'consent': 'Подтвердите согласие.', 'slot': 'Выберите время.'}
+        return JsonResponse({'ok': False, 'errors': {key: messages.get(key, 'Проверьте поле.') for key in form.errors}}, status=400)
+    if form.cleaned_data['website']:
+        return JsonResponse({'ok': False, 'error': 'Не удалось забронировать время.'}, status=400)
+    throttle = salted_hmac('booking-peer', request.META.get('REMOTE_ADDR', ''), secret=settings.SECRET_KEY).hexdigest()
+    recent = BookingRequest.objects.filter(created_at__gte=timezone.now() - timedelta(minutes=10))
+    duplicate = recent.filter(slot_id=form.cleaned_data['slot'], phone=form.cleaned_data['phone'],
+        email__iexact=form.cleaned_data['email'], name=form.cleaned_data['name'], throttle_key=throttle).exclude(status='cancelled').first()
+    if duplicate:
+        return JsonResponse({'ok': True, 'booking_id': duplicate.pk, 'demo': duplicate.is_demo})
+    if recent.filter(throttle_key=throttle).count() >= settings.BOOKING_RATE_LIMIT:
+        return JsonResponse({'ok': False, 'error': 'Слишком много заявок. Попробуйте позже или позвоните.'}, status=429)
+    try:
+        booking = reserve_slot(form.cleaned_data['slot'], form.cleaned_data, throttle, site)
+    except (SlotUnavailable, IntegrityError, OperationalError):
+        return JsonResponse({'ok': False, 'conflict': True,
+            'error': 'Это время уже занято или закрыто. Обновите расписание и выберите другое окно.'}, status=409)
+    notify_booking(booking, site_url=request.build_absolute_uri('/'))
+    return JsonResponse({'ok': True, 'booking_id': booking.pk, 'demo': booking.is_demo}, status=201)
 
 
 def robots_view(request):

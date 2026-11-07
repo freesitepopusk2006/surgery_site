@@ -2,6 +2,8 @@ from django.db import models
 from django.core.validators import FileExtensionValidator, MinValueValidator, MaxValueValidator
 from django.urls import reverse
 from django.core.exceptions import ValidationError
+from django.utils import timezone
+from datetime import timedelta
 from .validators import validate_map_embed_url
 
 
@@ -34,6 +36,10 @@ class SiteSettings(models.Model):
     map_url = models.URLField('Ссылка на маршрут', blank=True,
                              help_text='Обычная ссылка на Яндекс Карты или другую карту, без HTML.')
     booking_enabled = models.BooleanField('Принимать заявки на сайте', default=True)
+    schedule_enabled = models.BooleanField('Запись с выбором времени', default=False)
+    schedule_title = models.CharField('Заголовок расписания', max_length=180, default='Время для вашего зрения')
+    schedule_intro = models.TextField('Пояснение к расписанию', blank=True,
+        default='Выберите удобное время консультации. Мы подтвердим запись после проверки заявки.')
     notification_email = models.EmailField('Почта для уведомлений о заявках', blank=True,
         help_text='Адрес получателя. Ключ почтового сервиса задаётся в окружении сервера.')
     booking_title = models.CharField('Заголовок формы', max_length=180, default='Запись на приём')
@@ -584,11 +590,55 @@ class SitePage(models.Model):
         return reverse('core:site_page', args=[self.slug])
 
 
+class AppointmentSlot(models.Model):
+    service = models.CharField('Услуга', max_length=180, default='Консультация офтальмолога')
+    starts_at = models.DateTimeField('Начало', unique=True, db_index=True)
+    duration_minutes = models.PositiveSmallIntegerField('Продолжительность, минут', default=30,
+        validators=[MinValueValidator(10), MaxValueValidator(180)])
+    is_published = models.BooleanField('Показывать в расписании', default=True)
+    is_blocked = models.BooleanField('Закрыть для записи', default=False)
+    is_demo = models.BooleanField('Демонстрационное окно', default=False,
+        help_text='Вымышленное расписание для проверки интерфейса. Не является записью на реальный приём.')
+    note = models.TextField('Внутренняя заметка', blank=True)
+    reservation_version = models.PositiveIntegerField(default=0, editable=False)
+
+    @property
+    def ends_at(self):
+        return self.starts_at + timedelta(minutes=self.duration_minutes)
+
+    def clean(self):
+        super().clean()
+        if not self.starts_at or not self.duration_minutes:
+            return
+        if self.pk:
+            original = type(self).objects.get(pk=self.pk)
+            if self.bookings.exclude(status='cancelled').exists() and any(
+                getattr(original, field) != getattr(self, field)
+                for field in ('starts_at', 'duration_minutes', 'service', 'is_demo')
+            ):
+                raise ValidationError('У окна есть действующая бронь. Сначала отмените её; дату и услугу брони нельзя менять незаметно для посетителя.')
+        if self.is_published:
+            others = type(self).objects.filter(is_published=True,
+                starts_at__gt=self.starts_at - timedelta(minutes=180), starts_at__lt=self.ends_at).exclude(pk=self.pk)
+            if any(slot.ends_at > self.starts_at for slot in others):
+                raise ValidationError({'starts_at': 'Это время пересекается с другим опубликованным окном.'})
+
+    class Meta:
+        ordering = ['starts_at']
+        verbose_name = 'Окно приёма'
+        verbose_name_plural = 'Расписание приёма'
+
+    def __str__(self):
+        return f'{timezone.localtime(self.starts_at):%d.%m.%Y %H:%M} · {self.service}'
+
+
 class BookingRequest(models.Model):
     class Status(models.TextChoices):
-        NEW = 'new', 'Новая'
+        NEW = 'new', 'Ожидает подтверждения'
         CONTACTED = 'contacted', 'Связались'
         CLOSED = 'closed', 'Закрыта'
+        CONFIRMED = 'confirmed', 'Подтверждена'
+        CANCELLED = 'cancelled', 'Отменена'
 
     class Notification(models.TextChoices):
         PENDING = 'pending', 'Ожидает отправки'
@@ -597,6 +647,13 @@ class BookingRequest(models.Model):
         UNCONFIGURED = 'unconfigured', 'Почта не настроена'
 
     name = models.CharField('Имя', max_length=120)
+    email = models.EmailField('Почта посетителя', blank=True)
+    slot = models.ForeignKey(AppointmentSlot, on_delete=models.PROTECT, null=True, blank=True,
+        related_name='bookings', verbose_name='Окно приёма')
+    appointment_start = models.DateTimeField('Забронированное время', null=True, blank=True)
+    appointment_duration = models.PositiveSmallIntegerField('Длительность брони, минут', null=True, blank=True)
+    appointment_service = models.CharField('Услуга при бронировании', max_length=180, blank=True)
+    is_demo = models.BooleanField('Демонстрационная бронь', default=False)
     phone = models.CharField('Телефон', max_length=30)
     consent = models.BooleanField('Согласие на обработку данных')
     consent_document = models.CharField('Документ согласия при отправке', max_length=500, blank=True)
@@ -610,6 +667,8 @@ class BookingRequest(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        constraints = [models.UniqueConstraint(fields=['slot'],
+            condition=models.Q(slot__isnull=False) & ~models.Q(status='cancelled'), name='one_active_booking_per_slot')]
         verbose_name = 'Заявка на приём'
         verbose_name_plural = 'Заявки на приём'
 

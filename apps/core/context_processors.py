@@ -40,6 +40,7 @@ def site_context(request):
         'phone_href': phone_href, 'social_links': social_links, 'nav_links': nav,
         'privacy_url': privacy_url, 'consent_url': consent_url, 'site_documents': documents,
         'booking_available': bool(site.pk and site.booking_enabled and privacy_url and consent_url),
+        'schedule_available': bool(site.pk and site.booking_enabled and site.schedule_enabled),
         'has_about': has_about, 'has_directions': has_directions,
         'has_reviews': has_reviews, 'has_clinic': has_clinic,
         'canonical_url': request.build_absolute_uri(request.path),
