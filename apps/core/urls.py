@@ -11,6 +11,7 @@ urlpatterns = [
     path('pages/<str:slug>/', views.site_page_view, name='site_page'),
     path('privacy/', views.site_page_view, {'slug': 'privacy'}, name='privacy'),
     path('booking/', views.booking_view, name='booking'),
+    path('booking/csrf/', views.booking_csrf_view, name='booking_csrf'),
     path('booking/slots/', views.appointment_slots_view, name='appointment_slots'),
     path('booking/reserve/', views.appointment_booking_view, name='appointment_booking'),
     path('robots.txt', views.robots_view, name='robots'),

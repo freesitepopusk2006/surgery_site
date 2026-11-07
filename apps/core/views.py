@@ -13,6 +13,8 @@ from django.utils.crypto import salted_hmac
 from django.utils._os import safe_join
 from django.core.exceptions import SuspiciousFileOperation
 from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET
+from django.middleware.csrf import get_token
 
 from .content import render_content
 from .forms import BookingForm, AppointmentBookingForm
@@ -109,7 +111,7 @@ def site_page_view(request, slug):
 
 @require_POST
 def booking_view(request):
-    if len(request.body) > 8192:
+    if int(request.META.get('CONTENT_LENGTH') or 0) > 8192:
         return JsonResponse({'ok': False, 'error': 'Слишком большой запрос.'}, status=413)
     site = SiteSettings.objects.order_by('pk').first()
     privacy = SitePage.objects.filter(slug='privacy', is_published=True).exists()
@@ -157,9 +159,24 @@ def appointment_slots_view(request):
     return response
 
 
+@require_GET
+def booking_csrf_view(request):
+    response = JsonResponse({'csrfToken': get_token(request)})
+    response['Cache-Control'] = 'no-store'
+    return response
+
+
+def csrf_failure_view(request, reason=''):
+    if request.path.startswith('/booking/'):
+        return JsonResponse({'ok': False, 'csrf_error': True,
+            'error': 'Сессия формы обновилась. Повторите отправку; введённые данные сохранены.'}, status=403)
+    from django.views.csrf import csrf_failure
+    return csrf_failure(request, reason=reason)
+
+
 @require_POST
 def appointment_booking_view(request):
-    if len(request.body) > 8192:
+    if int(request.META.get('CONTENT_LENGTH') or 0) > 8192:
         return JsonResponse({'ok': False, 'error': 'Слишком большой запрос.'}, status=413)
     site = SiteSettings.objects.order_by('pk').first()
     if not site or not site.booking_enabled or not site.schedule_enabled:

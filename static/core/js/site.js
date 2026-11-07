@@ -42,6 +42,18 @@
   const success = document.getElementById('bookingSuccess');
   const formError = document.getElementById('bookingError');
   let returnFocus;
+  function csrfCookie() {
+    const value = document.cookie.split(';').map(part => part.trim()).find(part => part.startsWith('csrftoken='));
+    return value ? decodeURIComponent(value.slice('csrftoken='.length)) : '';
+  }
+  async function postBooking(signal, freshToken = '') {
+    const body = new FormData(form);
+    const token = freshToken || csrfCookie() || body.get('csrfmiddlewaretoken');
+    if (token) body.set('csrfmiddlewaretoken', token);
+    return fetch(form.action, {method: 'POST', body, signal,
+      headers: {'Accept': 'application/json', ...(token ? {'X-CSRFToken': token} : {})},
+      credentials: 'same-origin', mode: 'same-origin'});
+  }
   document.querySelectorAll('[data-booking-open]').forEach(button => {
     button.addEventListener('click', () => {
       if (!dialog) return;
@@ -85,11 +97,21 @@
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 20000);
     try {
-      const response = await fetch(form.action, {
-        method: 'POST', body: new FormData(form), signal: controller.signal,
-        headers: {'Accept': 'application/json'}, credentials: 'same-origin',
-      });
-      const data = await response.json();
+      let response = await postBooking(controller.signal);
+      if (response.status === 403) {
+        const refreshed = await fetch(dialog.dataset.csrfUrl || '/booking/csrf/', {signal: controller.signal,
+          credentials: 'same-origin', mode: 'same-origin', cache: 'no-store'});
+        if (refreshed.ok) {
+          const session = await refreshed.json();
+          if (session.csrfToken) response = await postBooking(controller.signal, session.csrfToken);
+        }
+      }
+      let data;
+      try { data = await response.json(); }
+      catch {
+        if (response.status === 403) throw new Error('Браузер не подтвердил сессию формы. Откройте сайт в отдельной вкладке и повторите отправку.');
+        throw new Error(`Сервер не подтвердил результат (ошибка ${response.status}). Повторите отправку — повторная заявка не создастся.`);
+      }
       if (!response.ok || !data.ok) {
         if (data.conflict) {
           dialog.dispatchEvent(new CustomEvent('booking:conflict', {detail: data}));
@@ -113,8 +135,10 @@
       success.hidden = false;
       dialog.dispatchEvent(new CustomEvent('booking:saved', {detail: data}));
       success.querySelector('[data-booking-close]')?.focus();
-    } catch {
-      formError.textContent = 'Не удалось подтвердить отправку. Проверьте соединение и попробуйте ещё раз.';
+    } catch (error) {
+      formError.textContent = error.name === 'AbortError'
+        ? 'Ответ занял больше времени, чем обычно. Повторите отправку — повторная заявка не создастся.'
+        : error instanceof TypeError ? 'Нет связи с сайтом. Проверьте соединение и повторите отправку.' : error.message;
       formError.hidden = false;
     } finally {
       clearTimeout(timeout);

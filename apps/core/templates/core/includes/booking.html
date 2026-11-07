@@ -1,4 +1,4 @@
-<dialog class="booking-dialog{% if schedule_available %} schedule-dialog{% endif %}" id="bookingDialog" aria-labelledby="bookingTitle">
+<dialog class="booking-dialog{% if schedule_available %} schedule-dialog{% endif %}" id="bookingDialog" aria-labelledby="bookingTitle" data-csrf-url="{% url 'core:booking_csrf' %}">
   <div class="booking-sheet">
     <button class="close-button" type="button" data-booking-close aria-label="Закрыть форму"><span></span><span></span></button>
     <span class="eyebrow">{% if schedule_available %}Консультация · по предварительной записи{% else %}Обратная связь{% endif %}</span>

@@ -161,6 +161,21 @@ class AppointmentTests(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertFalse(BookingRequest.objects.exists())
 
+    def test_rotated_login_csrf_is_json_and_fresh_token_restores_submission(self):
+        client = Client(enforce_csrf_checks=True)
+        old = client.get(reverse('core:booking_csrf')).json()['csrfToken']
+        client.cookies['csrftoken'] = 'z' * 32
+        response = client.post(reverse('core:appointment_booking'), {**self.payload, 'csrfmiddlewaretoken': old})
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(response.json()['csrf_error'])
+        self.assertFalse(BookingRequest.objects.exists())
+        refreshed = client.get(reverse('core:booking_csrf'))
+        self.assertEqual(refreshed['Cache-Control'], 'no-store')
+        fresh = refreshed.json()['csrfToken']
+        response = client.post(reverse('core:appointment_booking'), {**self.payload, 'csrfmiddlewaretoken': fresh})
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(BookingRequest.objects.count(), 1)
+
     def test_admin_decisions_require_post_csrf_and_change_permission(self):
         self.reserve()
         booking = BookingRequest.objects.get()
