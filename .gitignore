@@ -1,3 +1,14 @@
 __pycache__/
 *.py[cod]
 .venv-local/
+.venv/
+.env
+.env.*
+!.env.example
+staticfiles/
+.local-data/
+*.log
+.coverage
+htmlcov/
+intermediate/
+intermidiate/

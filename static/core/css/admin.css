@@ -1,0 +1,33 @@
+:root, html[data-theme="light"] {
+  --primary: #63796f;
+  --secondary: #263b31;
+  --accent: #eef3ee;
+  --header-bg: #263b31;
+  --header-color: #ffffff;
+  --header-branding-color: #ffffff;
+  --link-fg: #37634e;
+  --breadcrumbs-bg: #eef2ed;
+  --breadcrumbs-fg: #263b31;
+  --breadcrumbs-link-fg: #37634e;
+  --button-bg: #263b31;
+  --button-hover-bg: #3b5648;
+  --default-button-bg: #263b31;
+  --default-button-hover-bg: #3b5648;
+}
+@media (prefers-color-scheme: dark) {
+  html[data-theme="auto"] { --link-fg: #a2c9b3; }
+}
+html[data-theme="dark"] { --link-fg: #a2c9b3; }
+#header { padding-block: 20px; }
+.module h2, .inline-group h2 { font-weight: 500; letter-spacing: .01em; }
+fieldset.module { margin-bottom: 28px; }
+.form-row { padding-block: 18px; }
+.help { max-width: 780px; line-height: 1.6; }
+textarea { min-height: 130px; max-width: 100%; line-height: 1.6; }
+input, select, textarea { border-radius: 5px; }
+.submit-row { position: sticky; bottom: 0; z-index: 10; }
+.inline-group .tabular td.original p { position: static; height: auto; }
+@media (max-width: 767px) {
+  .submit-row { position: static; }
+  .form-row input:not([type="checkbox"]), .form-row textarea { max-width: 100%; }
+}
