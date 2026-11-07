@@ -135,12 +135,12 @@ class HomePage(models.Model):
         help_text='Переносы строк сохраняются на большом экране. Текст можно полностью заменить.')
     hero_intro = models.TextField('Текст первого экрана', blank=True)
     hero_image = models.ImageField('Изображение первого экрана', upload_to='homepage/', blank=True,
-        help_text='Портрет или оптический образ. Желательно от 1400 px, вертикальный кадр 4:5.')
+        help_text='Портрет или фотография обследования. Желательно от 1400 px, вертикальный кадр 4:5.')
     hero_image_alt = models.CharField('Описание изображения', max_length=255, blank=True)
     hero_image_position = models.CharField('Положение кадра', max_length=12, default='center',
         choices=[('center', 'По центру'), ('top', 'Сверху'), ('bottom', 'Снизу')])
-    use_default_artwork = models.BooleanField('Показывать оптические иллюстрации оформления', default=True,
-        help_text='Используются, когда свои изображения первого экрана и подхода не загружены.')
+    use_default_artwork = models.BooleanField('Показывать стандартные медицинские иллюстрации', default=True,
+        help_text='Щелевая лампа и обследование. Используются, когда свои изображения первого экрана и этапов не загружены.')
     process_title = models.CharField('Заголовок этапов обращения', max_length=255,
         default='От первого вопроса до понятного плана.')
     process_description = models.TextField('Введение к этапам', blank=True)

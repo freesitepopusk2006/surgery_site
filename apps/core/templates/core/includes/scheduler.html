@@ -1,4 +1,4 @@
-<div id="bookingFormWrap" data-scheduler data-slots-url="{% url 'core:appointment_slots' %}">
+<div id="bookingFormWrap" data-scheduler data-slots-url="{% url 'core:appointment_slots' %}" data-success-text="{{ site_settings.booking_success_text|default:'Запись ожидает подтверждения администратором. Это время пока недоступно другим посетителям.' }}">
   {% if site_settings.schedule_intro %}<p class="booking-intro schedule-intro">{{ site_settings.schedule_intro|linebreaksbr }}</p>{% endif %}
   <div class="schedule-progress" aria-label="Шаги записи"><span id="scheduleStepOne" aria-current="step">01 <span>Выберите время</span></span><span id="scheduleStepTwo">02 <span>Ваши данные</span></span></div>
   <div id="scheduleChoice">
@@ -12,7 +12,7 @@
     <div class="schedule-day-tabs" id="scheduleDayTabs" aria-label="Дни недели"></div>
     <div class="schedule-grid" id="scheduleGrid" aria-label="Время консультаций"></div>
     <div class="schedule-selection">
-      <div><span class="eyebrow">Ваш выбор</span><p id="scheduleSelectedLabel">Выберите свободное окно</p><small id="scheduleSelectedService">Время закрепится после отправки данных</small></div>
+      <div><span class="eyebrow">Ваш выбор</span><p id="scheduleSelectedLabel">Выберите свободное окно</p><small id="scheduleSelectedService">Окно будет занято после отправки формы</small></div>
       <button class="button" type="button" id="scheduleContinue" disabled>Забронировать время <span aria-hidden="true">↗</span></button>
     </div>
   </div>

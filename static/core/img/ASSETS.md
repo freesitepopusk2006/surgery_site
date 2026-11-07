@@ -1,4 +1,6 @@
-# Decorative optical illustrations
+# Archived decorative optical illustrations
+
+These are retained originals from the previous design. They are no longer the default website images. Current medical illustrations and generation prompts are documented in [CLINICAL_ASSETS.md](CLINICAL_ASSETS.md).
 
 WebP delivery versions are deterministic re-encodings of the original PNGs using sharp (quality 88, effort 6). Dimensions and composition are preserved; PNG originals remain as browser fallbacks. No new visual content was generated for this optimization.
 

@@ -91,9 +91,12 @@ main { min-height: 45vh; }
 .hero-signature { margin-top: auto; padding-top: 44px; }
 .hero-signature p { font-size: 19px; line-height: 1.4; letter-spacing: -.025em; }
 .hero-signature span { display: block; color: var(--muted); font-size: 13px; margin-top: 4px; }
-.hero-visual { min-width: 0; overflow: hidden; border-radius: 9px; min-height: 540px; aspect-ratio: 1.03; background: var(--wash); }
+.hero-visual { position: relative; width: 100%; min-width: 0; overflow: hidden; border-radius: 9px; min-height: 540px; aspect-ratio: 1.03; background: var(--wash); }
 .hero-visual img { width: 100%; height: 100%; object-fit: cover; }
 .hero-visual picture { display: block; width: 100%; height: 100%; }
+.illustration-caption { color: var(--muted); font-size: 11px; line-height: 1.5; font-weight: 400; }
+.hero-illustration-caption { position: absolute; bottom: 14px; left: 14px; padding: 6px 10px; background: rgba(247,247,243,.94); border-radius: 3px; }
+.process-art>.illustration-caption { margin-top: -18px; }
 .position-top img { object-position: center top; }
 .position-bottom img { object-position: center bottom; }
 .editorial-section { display: grid; grid-template-columns: 220px minmax(0,1fr); column-gap: clamp(32px, 4vw, 64px); padding-block: var(--section-space); border-top: 1px solid var(--rule); scroll-margin-top: 88px; }
@@ -363,7 +366,7 @@ details[open]>summary .disclosure-sign::after { transform: rotate(0); }
   .about-layout { grid-template-columns: 1fr; }
   .about-photo { max-width: 440px; aspect-ratio: 4 / 5; }
   .process-layout { grid-template-columns: 1fr; gap: 32px; }
-  .process-art img { display: none; }
+  .process-art img, .process-art>picture, .process-art>.illustration-caption { display: none; }
   .process-content h2 { font-size: 40px; }
   .process-steps { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; }
   .process-steps li, .process-steps li:first-child { border: 0; padding: 0; }

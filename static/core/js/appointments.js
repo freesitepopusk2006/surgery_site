@@ -27,7 +27,7 @@
     grid.querySelectorAll('[data-slot]').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.slot) === slot?.id)));
     el('scheduleContinue').disabled = !slot;
     el('scheduleSelectedLabel').textContent = slot?.label || 'Выберите свободное окно';
-    el('scheduleSelectedService').textContent = slot ? `${slot.service} · ${slot.duration} минут` : 'Время закрепится после отправки данных';
+    el('scheduleSelectedService').textContent = slot ? `${slot.service} · ${slot.duration} минут` : 'Окно будет занято после отправки формы';
   }
   function render(data) {
     calendar = data;
@@ -68,7 +68,7 @@
     selectDay(activeDay);
     const refreshed = data.days.flatMap(day => day.slots).find(slot => slot.id === selected?.id && slot.status === 'free');
     selectSlot(refreshed || null);
-    status.textContent = free ? 'Выберите окно. Бронь закрепляется после отправки формы.' : 'На этой неделе свободных окон нет. Посмотрите следующую неделю.';
+    status.textContent = free ? 'Выберите удобное время консультации.' : 'На этой неделе свободных окон нет. Посмотрите следующую неделю.';
   }
   async function load(week, message = '') {
     loading?.abort();
@@ -140,7 +140,7 @@
   });
   dialog.addEventListener('booking:saved', event => {
     clearInterval(poll);
-    el('scheduleSuccessText').textContent = `Бронь №${event.detail.booking_id} · ${selected?.label || ''}. Время закреплено за вашей заявкой и ожидает подтверждения администратором.`;
+    el('scheduleSuccessText').textContent = `Бронь №${event.detail.booking_id} · ${selected?.label || ''}. ${scheduler.dataset.successText}`;
     el('scheduleSuccessDemo').hidden = !event.detail.demo;
     selectSlot(null);
     dialog.scrollTop = 0;
