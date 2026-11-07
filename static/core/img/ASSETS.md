@@ -1,5 +1,7 @@
 # Decorative optical illustrations
 
+WebP delivery versions are deterministic re-encodings of the original PNGs using sharp (quality 88, effort 6). Dimensions and composition are preserved; PNG originals remain as browser fallbacks. No new visual content was generated for this optimization.
+
 Generated with the built-in Imagegen tool for the approved visual direction. These are decorative illustrations, not a photograph of the doctor, clinic or treatment results. Original PNG outputs are preserved without retouching. Own images can replace them through Home page settings; the artwork can be disabled there.
 
 ## iris.png

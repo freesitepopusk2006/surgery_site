@@ -674,3 +674,9 @@ class BookingRequest(models.Model):
 
     def __str__(self):
         return f'Заявка #{self.pk} · {self.name}'
+
+
+class AdminLoginThrottle(models.Model):
+    key = models.CharField(max_length=64, unique=True)
+    failures = models.PositiveIntegerField(default=0)
+    window_start = models.DateTimeField(default=timezone.now, db_index=True)

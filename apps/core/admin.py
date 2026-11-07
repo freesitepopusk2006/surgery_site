@@ -7,6 +7,7 @@ from django.db import transaction
 from django.db.models import OuterRef, Subquery
 from django.utils import timezone
 from datetime import timedelta
+from datetime import datetime
 from django.http import Http404
 from django.utils.html import format_html
 from django.shortcuts import redirect
@@ -115,7 +116,7 @@ class SiteSettingsAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
     form = SiteSettingsAdminForm
     change_form_template = 'admin/core/sitesettings/change_form.html'
     list_display = ('doctor_name', 'phone', 'created_at')
-    readonly_fields = ('logo_preview',)
+    readonly_fields = ('logo_preview', 'backup_summary')
     fieldsets = (
         ('Имя и оформление', {
             'fields': ('doctor_name', 'short_name', 'specialty', 'logo_preview', 'logo', 'favicon', 'cta_text'),
@@ -147,6 +148,11 @@ class SiteSettingsAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
         }),
         ('Поиск, подвал и документы', {
             'fields': ('site_description', 'footer_note', 'privacy_policy_url'), 'classes': ('collapse',)
+        }),
+        ('Резервные копии', {
+            'fields': ('backup_summary',),
+            'description': 'Полный архив включает SQLite, заявки, пользователей и загруженные файлы. '
+                           'Копии хранятся приватно, не выдаются посетителям. Для отдельной внешней копии нужно подключить хранилище.'
         }),
     )
 
@@ -203,6 +209,15 @@ class SiteSettingsAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
     @admin.display(description='Текущий логотип')
     def logo_preview(self, obj):
         return self.image_preview(obj, 'logo')
+
+    @admin.display(description='Последняя полная копия')
+    def backup_summary(self, obj):
+        archives = list((settings.DATA_DIR / 'backups').glob('site-full-*.zip'))
+        if not archives:
+            return 'Копия пока не создана. Запуск через run.ps1 или run_site включает ежедневное копирование SQLite.'
+        latest = max(archives, key=lambda path: path.stat().st_mtime)
+        created = datetime.fromtimestamp(latest.stat().st_mtime, tz=timezone.get_current_timezone())
+        return f'{created:%d.%m.%Y %H:%M} · {latest.stat().st_size / 1024 / 1024:.1f} МБ · архивов: {len(archives)}'
 
 
 @admin.register(HomePage)

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "apps.core.middleware.FormProtectionMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -112,7 +113,7 @@ SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 CSRF_FAILURE_VIEW = 'apps.core.views.csrf_failure_view'
 SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True' if IS_RAILWAY and not DEBUG else 'False').lower() in {'true', '1'}
-SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '0'))
+SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '3600' if IS_RAILWAY and not DEBUG else '0'))
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')

@@ -140,4 +140,4 @@ if (-not $NoBrowser) {
     Start-Process $url -WindowStyle Hidden
 }
 
-& $pythonPath manage.py runserver "127.0.0.1:$Port"
+& $pythonPath manage.py run_site --local --port $Port
