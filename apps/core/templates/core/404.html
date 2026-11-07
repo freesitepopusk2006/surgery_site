@@ -1,0 +1,2 @@
+{% extends 'base.html' %}
+{% block content %}<section class="container not-found"><span class="eyebrow">Ошибка 404</span><h1>Кажется, здесь<br>ничего нет.</h1><p>Страница могла переехать или адрес указан с ошибкой.</p><div class="hero-actions"><a class="button" href="{% url 'core:home' %}">На главную <span aria-hidden="true">↗</span></a><a class="text-link" href="{% url 'core:patients' %}">Материалы пациентам <span aria-hidden="true">→</span></a></div></section>{% endblock %}

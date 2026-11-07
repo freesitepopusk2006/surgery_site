@@ -1,37 +1,8 @@
-{% extends 'base.html' %}
-
-{% block title %}Пациентам{% endblock %}
-
+{% extends 'base.html' %}{% load static %}
 {% block content %}
-<section class="patients-shell">
-    <div class="patients-heading">
-        <h1>Пациентам</h1>
-    </div>
-
-    <div class="main-squircle-wrap">
-        <div class="main-squircle patients-squircle">
-            {% if patient_categories %}
-                <div class="patient-topics" aria-label="Разделы для пациентов">
-                    {% for category in patient_categories %}
-                        <article class="patient-topic">
-                            <h2>{{ category.title }}</h2>
-                            <div class="patient-subtopics">
-                                {% for page in category.pages.all %}
-                                    {% if page.is_published %}
-                                        <a href="{% url 'core:patient_page_detail' page.slug %}">{{ page.title }}</a>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                        </article>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="empty-state">
-                    <h2>Разделы пока не заполнены</h2>
-                    <p>Добавьте категории и страницы для пациентов через админку.</p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-</section>
+<div class="container inner-page">
+  <nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="{% url 'core:home' %}">Главная</a><span aria-hidden="true">/</span><span>{{ site_settings.patients_title }}</span></nav>
+  <header class="page-heading"><div><span class="eyebrow">Материалы</span><h1>{{ site_settings.patients_title }}</h1>{% if site_settings.patients_intro %}<p>{{ site_settings.patients_intro|linebreaksbr }}</p>{% endif %}</div>{% if patient_categories %}<label class="search-field"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="1.5"/></svg><span class="sr-only">Найти материал</span><input type="search" id="patientSearch" placeholder="Найти материал" autocomplete="off"></label>{% endif %}</header>
+  {% if patient_categories %}<div class="patient-directory"><div id="patientTopics"><p id="patientStatus" class="sr-only" aria-live="polite"></p>{% for category in patient_categories %}<details class="topic"{% if forloop.first %} open{% endif %}><summary><h2>{{ category.title }}</h2><span class="disclosure-sign" aria-hidden="true"></span></summary><div class="topic-pages">{% for page in category.visible_pages %}<a href="{{ page.get_absolute_url }}" data-search="{{ page.title }} {{ category.title }}"><span>{{ page.title }}</span><span aria-hidden="true">↗</span></a>{% endfor %}</div></details>{% endfor %}<div class="empty-state" id="patientNoResults" hidden><h2>Материалы не найдены</h2><p>Попробуйте сократить запрос.</p><button class="text-link" id="patientReset" type="button">Сбросить поиск <span aria-hidden="true">↗</span></button></div></div>{% if homepage.use_default_artwork %}<figure class="directory-art"><img src="{% static 'core/img/lens.png' %}" alt="" loading="lazy" width="600" height="800"></figure>{% endif %}</div>{% else %}<div class="empty-state"><h2>Материалы пока не опубликованы</h2><a class="text-link" href="{% url 'core:home' %}">На главную <span aria-hidden="true">↗</span></a></div>{% endif %}
+</div>
 {% endblock %}

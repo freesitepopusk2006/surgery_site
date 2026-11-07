@@ -26,6 +26,8 @@ fieldset.module { margin-bottom: 28px; }
 textarea { min-height: 130px; max-width: 100%; line-height: 1.6; }
 input, select, textarea { border-radius: 5px; }
 .submit-row { position: sticky; bottom: 0; z-index: 10; }
+.content-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.content-toolbar button { padding: 7px 12px; color: var(--body-fg); background: var(--darkened-bg); border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; cursor: pointer; }
 .inline-group .tabular td.original p { position: static; height: auto; }
 @media (max-width: 767px) {
   .submit-row { position: static; }

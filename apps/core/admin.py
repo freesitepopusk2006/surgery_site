@@ -12,7 +12,7 @@ from .models import (
     PatientCategory,
     PatientPage,
     PatientPageSection,
-    Direction, ProcessStep, Qualification, PriceCategory, SitePage, BookingRequest,
+    Direction, ProcessStep, Qualification, PriceCategory, SitePage, BookingRequest, DoctorFact, FAQItem,
 )
 
 
@@ -74,6 +74,7 @@ class EditorialAdminMixin:
 
     class Media:
         css = {'all': ('core/css/admin.css',)}
+        js = ('core/js/admin.js',)
 
 
 class SingleSettingsAdmin(EditorialAdminMixin, admin.ModelAdmin):
@@ -134,6 +135,7 @@ class SiteSettingsAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
 @admin.register(HomePage)
 class HomePageAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
     singleton_order = '-created_at'
+    filter_horizontal = ('featured_patient_pages',)
     form = HomePageAdminForm
     list_display = (
         'id',
@@ -152,11 +154,16 @@ class HomePageAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
             'description': 'Заголовок и изображение образуют первый экран. Фото можно заменить без изменения вёрстки.'
         }),
         ('Видимость разделов', {
-            'fields': ('show_directions', 'show_about', 'show_process', 'show_prices', 'show_reviews', 'show_clinic', 'show_cases'),
-            'description': 'Пустые необязательные разделы скрываются автоматически.'
+            'fields': ('show_placeholders', 'show_directions', 'show_services', 'show_about', 'show_process',
+                       'show_cases', 'show_clinic', 'show_prices', 'show_reviews', 'show_patient_materials', 'show_faq'),
+            'description': 'Сохраните заготовки, пока наполняете сайт. Каждый раздел можно отдельно выключить.'
         }),
         ('С чем я могу помочь', {
             'fields': ('help_title', 'help_description')
+        }),
+        ('Каталог услуг', {
+            'fields': ('services_title', 'services_description'),
+            'description': 'Категории и услуги берутся из прайса. В направлениях можно выбрать варианты услуг и тип отображения.'
         }),
         ('Обо мне', {
             'fields': ('about_title', 'about_text', 'about_photo_preview', 'about_photo')
@@ -177,6 +184,11 @@ class HomePageAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
         }),
         ('Отзывы', {
             'fields': ('reviews_title',)
+        }),
+        ('Материалы пациентам', {'fields': ('patient_materials_title', 'patient_materials_description', 'featured_patient_pages')}),
+        ('Вопросы и ответы', {
+            'fields': ('faq_title', 'faq_description'),
+            'description': 'Вопросы добавляются в разделе «Вопросы и ответы».'
         }),
         ('Финальный блок', {'fields': ('final_title', 'final_text')}),
         ('Изображение прежней версии', {
@@ -288,7 +300,22 @@ class OrderedContentAdmin(EditorialAdminMixin, admin.ModelAdmin):
 @admin.register(Direction)
 class DirectionAdmin(OrderedContentAdmin):
     autocomplete_fields = ('patient_page',)
-    fields = ('title', 'description', 'patient_page', 'url', 'order', 'is_published')
+    filter_horizontal = ('services',)
+    fields = ('title', 'description', 'presentation', 'image', 'services', 'patient_page', 'url', 'order', 'is_published')
+
+
+@admin.register(DoctorFact)
+class DoctorFactAdmin(OrderedContentAdmin):
+    fields = ('title', 'value', 'description', 'order', 'is_published')
+
+
+@admin.register(FAQItem)
+class FAQItemAdmin(EditorialAdminMixin, admin.ModelAdmin):
+    list_display = ('question', 'order', 'is_published')
+    list_editable = ('order', 'is_published')
+    list_filter = ('is_published',)
+    search_fields = ('question', 'answer')
+    fields = ('question', 'answer', 'order', 'is_published')
 
 
 @admin.register(ProcessStep)
@@ -310,6 +337,8 @@ class PriceItemInline(admin.TabularInline):
 
 @admin.register(PriceCategory)
 class PriceCategoryAdmin(OrderedContentAdmin):
+    list_display = ('title', 'unit_text', 'show_on_home', 'order', 'is_published')
+    list_editable = ('show_on_home', 'order', 'is_published')
     inlines = (PriceItemInline,)
 
 
@@ -325,6 +354,7 @@ class SitePageAdmin(EditorialAdminMixin, admin.ModelAdmin):
 
 @admin.register(BookingRequest)
 class BookingRequestAdmin(EditorialAdminMixin, admin.ModelAdmin):
+    actions = ('retry_notification',)
     list_display = ('id', 'created_at', 'name', 'phone', 'status', 'notification_status')
     list_editable = ('status',)
     list_filter = ('status', 'notification_status', 'created_at')
@@ -337,6 +367,15 @@ class BookingRequestAdmin(EditorialAdminMixin, admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+    @admin.action(description='Повторить почтовое уведомление', permissions=['change'])
+    def retry_notification(self, request, queryset):
+        from .notifications import notify_booking
+        count = 0
+        for booking in queryset.exclude(notification_status=BookingRequest.Notification.SENT)[:20]:
+            notify_booking(booking)
+            count += 1
+        self.message_user(request, f'Обработано уведомлений: {count}. Результат указан в колонке «Уведомление».')
 
 
 admin.site.site_header = 'Управление сайтом'

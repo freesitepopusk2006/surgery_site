@@ -1,0 +1,21 @@
+<section class="container editorial-section" id="directions">
+  <div class="section-label"><span class="eyebrow">01 / Направления</span>{% include 'core/includes/edit_section.html' with admin_url='admin:core_direction_changelist' %}</div>
+  <div class="section-main"><header class="section-heading"><h2>{{ homepage.help_title }}</h2>{% if homepage.help_description and directions %}<p>{{ homepage.help_description|linebreaksbr }}</p>{% endif %}</header>
+    <div class="directions-composition">
+    {% for direction in directions %}
+      {% if direction.presentation == 'card' %}
+      <article class="direction-card">
+        {% if direction.image %}<img src="{{ direction.image.url }}" alt="" loading="lazy" width="640" height="440">{% elif homepage.show_placeholders %}<div class="scaffold-media direction-card-art" aria-label="Место для изображения направления"><span class="optical-line" aria-hidden="true"></span></div>{% endif %}
+        <div class="direction-card-body"><span class="eyebrow">{{ forloop.counter|stringformat:'02d' }}</span><h3>{{ direction.title }}</h3>{% if direction.description %}<p>{{ direction.description }}</p>{% endif %}{% if direction.public_services %}<ul class="direction-service-list">{% for service in direction.public_services %}<li><a href="{% url 'core:prices' %}#price-category-{% if service.category_id %}{{ service.category_id }}{% else %}other{% endif %}">{{ service.title }} <span aria-hidden="true">↗</span></a></li>{% endfor %}</ul>{% endif %}{% if direction.link %}<a href="{{ direction.link }}" class="text-link">Подробнее <span aria-hidden="true">↗</span></a>{% endif %}</div>
+      </article>
+      {% elif direction.presentation == 'expandable' and direction.public_services or direction.presentation == 'expandable' and direction.image %}
+      <details class="direction-expandable"><summary><span class="direction-summary-copy"><h3>{{ direction.title }}</h3>{% if direction.description %}<span>{{ direction.description }}</span>{% endif %}</span><span class="disclosure-sign" aria-hidden="true"></span></summary><div class="direction-expanded-body">{% if direction.image %}<img src="{{ direction.image.url }}" alt="" loading="lazy" width="480" height="360">{% endif %}<div>{% if direction.public_services %}<ul class="direction-service-list">{% for service in direction.public_services %}<li><a href="{% url 'core:prices' %}#price-category-{% if service.category_id %}{{ service.category_id }}{% else %}other{% endif %}">{{ service.title }} <span aria-hidden="true">↗</span></a></li>{% endfor %}</ul>{% endif %}{% if direction.link %}<a class="text-link" href="{{ direction.link }}">Подробнее о направлении <span aria-hidden="true">↗</span></a>{% endif %}</div></div></details>
+      {% else %}
+        {% if direction.link %}<a class="direction-row" href="{{ direction.link }}"><h3>{{ direction.title }}</h3><p>{{ direction.description }}</p><span class="row-arrow" aria-hidden="true">↗</span></a>{% else %}<div class="direction-row"><h3>{{ direction.title }}</h3><p>{{ direction.description }}</p></div>{% endif %}
+      {% endif %}
+    {% empty %}
+      {% for number in '123' %}<article class="direction-scaffold"><span class="eyebrow">0{{ number }} / Направление</span><h3>Направление помощи</h3>{% include 'core/includes/scaffold_lines.html' %}<span class="scaffold-corner" aria-hidden="true">↗</span></article>{% endfor %}
+    {% endfor %}
+    </div>
+  </div>
+</section>

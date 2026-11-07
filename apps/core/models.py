@@ -87,6 +87,21 @@ class SiteSettings(models.Model):
 
 
 class HomePage(models.Model):
+    show_placeholders = models.BooleanField('Показывать заготовки пустых разделов', default=True,
+        help_text='Сохраняет полную композицию до наполнения. Заготовки не содержат вымышленных данных. '
+                  'После заполнения можно выключить: незаполненные разделы будут скрыты.')
+    show_services = models.BooleanField('Каталог услуг на главной', default=True)
+    services_title = models.CharField('Заголовок каталога услуг', max_length=255, default='Услуги и лечение')
+    services_description = models.TextField('Введение в каталог услуг', blank=True)
+    show_patient_materials = models.BooleanField('Материалы пациентам на главной', default=True)
+    patient_materials_title = models.CharField('Заголовок материалов на главной', max_length=255,
+                                               default='Полезно знать до приёма')
+    patient_materials_description = models.TextField('Введение к материалам', blank=True)
+    featured_patient_pages = models.ManyToManyField('PatientPage', blank=True, related_name='featured_on',
+        verbose_name='Материалы на главной', help_text='Выберите до 6 статей. Если выбор пустой, выводятся первые 3 опубликованные.')
+    show_faq = models.BooleanField('Ответы на вопросы', default=True)
+    faq_title = models.CharField('Заголовок вопросов', max_length=255, default='Ответы на ваши вопросы')
+    faq_description = models.TextField('Введение к вопросам', blank=True)
     hero_kicker = models.CharField('Подпись над заголовком', max_length=120, blank=True)
     hero_title = models.TextField('Заголовок первого экрана', default='Зрение.\nВ центре внимания.',
         help_text='Переносы строк сохраняются на большом экране. Текст можно полностью заменить.')
@@ -232,6 +247,10 @@ class Case(models.Model):
 
 
 class PriceItem(models.Model):
+    @property
+    def unit_label(self):
+        return self.unit_text or (self.category.unit_text if self.category_id else '')
+
     category = models.ForeignKey('PriceCategory', on_delete=models.SET_NULL, blank=True, null=True,
                                  related_name='items', verbose_name='Категория')
     unit_text = models.CharField('Единица / условия расчёта', max_length=180, blank=True,
@@ -429,6 +448,11 @@ class OrderedPublishedModel(models.Model):
 
 
 class Direction(OrderedPublishedModel):
+    presentation = models.CharField('Отображение', max_length=16, default='expandable', choices=[
+        ('row', 'Лаконичная строка'), ('expandable', 'Раскрытие вариантов услуг'), ('card', 'Карточка с изображением')])
+    image = models.ImageField('Изображение направления', upload_to='directions/', blank=True)
+    services = models.ManyToManyField(PriceItem, blank=True, related_name='directions',
+        verbose_name='Варианты услуг', help_text='Услуги берутся из прайса. Неактивные позиции и скрытые категории не выводятся.')
     title = models.CharField('Название', max_length=255)
     description = models.TextField('Краткое описание', blank=True)
     patient_page = models.ForeignKey(PatientPage, on_delete=models.SET_NULL, null=True, blank=True,
@@ -464,6 +488,31 @@ class ProcessStep(OrderedPublishedModel):
         return self.title
 
 
+class DoctorFact(OrderedPublishedModel):
+    title = models.CharField('Подпись', max_length=120)
+    value = models.CharField('Значение / основной текст', max_length=180)
+    description = models.TextField('Пояснение', blank=True)
+
+    class Meta(OrderedPublishedModel.Meta):
+        verbose_name = 'Факт о враче'
+        verbose_name_plural = 'Факты о враче'
+
+    def __str__(self):
+        return self.title
+
+
+class FAQItem(OrderedPublishedModel):
+    question = models.CharField('Вопрос', max_length=255)
+    answer = models.TextField('Ответ', help_text='Абзацы разделяйте пустой строкой, списки начинайте с «- ».')
+
+    class Meta(OrderedPublishedModel.Meta):
+        verbose_name = 'Вопрос и ответ'
+        verbose_name_plural = 'Вопросы и ответы'
+
+    def __str__(self):
+        return self.question
+
+
 class Qualification(OrderedPublishedModel):
     year = models.CharField('Год / период', max_length=60, blank=True)
     title = models.CharField('Образование / квалификация', max_length=255)
@@ -481,6 +530,7 @@ class Qualification(OrderedPublishedModel):
 
 
 class PriceCategory(OrderedPublishedModel):
+    show_on_home = models.BooleanField('Показать в каталоге главной', default=True)
     title = models.CharField('Название категории', max_length=255)
     unit_text = models.CharField('Общая единица расчёта', max_length=180, blank=True,
         help_text='Например: цена за оба глаза. Услуга может иметь собственную подпись.')

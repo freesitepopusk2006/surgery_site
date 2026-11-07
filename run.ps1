@@ -9,6 +9,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 Set-Location -LiteralPath $PSScriptRoot
+$env:DEBUG = 'True' # This helper starts the local loopback preview only.
 
 function Test-Python {
     param([string]$Path)
@@ -115,6 +116,10 @@ if ($shouldInstall) {
     }
 }
 
+& $pythonPath manage.py prepare_data
+if ($LASTEXITCODE -ne 0) { throw 'Data preparation failed' }
+& $pythonPath manage.py migrate --noinput
+if ($LASTEXITCODE -ne 0) { throw 'Migrations failed' }
 & $pythonPath manage.py check
 if ($LASTEXITCODE -ne 0) {
     throw "Django check failed"

@@ -1,0 +1,2 @@
+{% extends 'base.html' %}
+{% block content %}<article class="container inner-page document-page"><nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="{% url 'core:home' %}">Главная</a><span aria-hidden="true">/</span><span>Документы</span></nav><header class="article-heading"><h1>{{ document.title }}</h1></header><div class="prose document-body">{{ body_html }}</div></article>{% endblock %}

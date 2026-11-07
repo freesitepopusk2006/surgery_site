@@ -1,0 +1,8 @@
+<section class="services-band" id="services"><div class="container">
+  <header class="wide-section-heading"><div><span class="eyebrow">02 / Услуги</span><h2>{{ homepage.services_title }}</h2>{% if homepage.services_description %}<p>{{ homepage.services_description|linebreaksbr }}</p>{% endif %}</div><a class="text-link" href="{% url 'core:prices' %}">Все услуги и цены <span aria-hidden="true">↗</span></a></header>
+  {% include 'core/includes/edit_section.html' with admin_url='admin:core_pricecategory_changelist' %}
+  <div class="service-category-grid">
+    {% for group in service_groups %}<article class="service-category"><span class="eyebrow">{{ forloop.counter|stringformat:'02d' }}</span><h3><a href="{% url 'core:prices' %}#price-category-{{ group.pk }}">{{ group.title }}</a></h3>{% if group.unit_text %}<p>{{ group.unit_text }}</p>{% endif %}<ul>{% for service in group.visible_items|slice:':3' %}<li>{{ service.title }}</li>{% endfor %}</ul><a class="service-category-link" href="{% url 'core:prices' %}#price-category-{{ group.pk }}" aria-label="{{ group.title }} — услуги и цены"><span>Смотреть услуги</span><span aria-hidden="true">↗</span></a></article>
+    {% empty %}{% for number in '1234' %}<article class="service-category service-category-scaffold" aria-label="Заготовка категории услуг"><span class="eyebrow">0{{ number }} / Категория</span><h3>Категория услуг</h3>{% include 'core/includes/scaffold_lines.html' %}<div class="scaffold-category-bottom" aria-hidden="true"><span></span>↗</div></article>{% endfor %}{% endfor %}
+  </div>
+</div></section>

@@ -1,71 +1,28 @@
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{{ page_title|default:"Сайт врача" }}{% endblock %}</title>
-
-    <link rel="icon" type="image/png" href="{% static 'core/img/favicon.png' %}">
-    <link rel="stylesheet" href="{% static 'core/css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'core/css/components.css' %}">
-    <link rel="stylesheet" href="{% static 'core/css/home.css' %}">
-    <link rel="stylesheet" href="{% static 'core/css/responsive.css' %}">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f3">
+  <title>{% if page_title %}{{ page_title }} · {% endif %}{{ brand_name }}</title>
+  <meta name="description" content="{{ page_description|default:site_settings.site_description|striptags }}">
+  <link rel="canonical" href="{{ canonical_url }}">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:title" content="{% if page_title %}{{ page_title }} · {% endif %}{{ brand_name }}">
+  <meta property="og:description" content="{{ page_description|default:site_settings.site_description|striptags }}">
+  <meta property="og:url" content="{{ canonical_url }}">
+  {% if site_settings.favicon %}<link rel="icon" href="{{ site_settings.favicon.url }}">{% else %}<link rel="icon" href="{% static 'core/img/favicon.png' %}">{% endif %}
+  <link rel="preload" href="{% static 'core/fonts/golos-text.ttf' %}" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="{% static 'core/css/site.css' %}">
+  <script defer src="{% static 'core/js/site.js' %}"></script>
+  {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <div class="site-bg">
-        {% include 'core/includes/header.html' %}
-
-        <main class="page-content">
-            {% block content %}{% endblock %}
-        </main>
-
-        {% include 'core/includes/footer.html' %}
-    </div>
-
-    <div class="booking-widget" id="bookingWidget">
-        <div class="booking-backdrop" id="bookingBackdrop" hidden></div>
-        <div class="booking-panel" id="bookingPanel" role="dialog" aria-modal="true" aria-labelledby="bookingTitle" hidden>
-            <button type="button" class="booking-panel__close" id="bookingClose" aria-label="Закрыть">×</button>
-            <div class="booking-panel__body" id="bookingFormWrap">
-                <h2 class="booking-panel__title" id="bookingTitle">Запись на приём</h2>
-                <p class="booking-panel__hint">Оставьте контакты — администратор перезвонит для уточнения времени.</p>
-                <form class="booking-form" id="bookingForm" novalidate>
-                    <label class="booking-field">
-                        <span>Имя</span>
-                        <input type="text" name="first_name" id="bookingFirstName" autocomplete="given-name" required placeholder="Иван">
-                    </label>
-                    <label class="booking-field">
-                        <span>Фамилия</span>
-                        <input type="text" name="last_name" id="bookingLastName" autocomplete="family-name" required placeholder="Иванов">
-                    </label>
-                    <label class="booking-field">
-                        <span>Телефон</span>
-                        <input type="tel" name="phone" id="bookingPhone" autocomplete="tel" required placeholder="+7 (___) ___-__-__">
-                    </label>
-                    <button type="submit" class="btn btn-dark booking-submit">Записаться</button>
-                </form>
-            </div>
-            <div class="booking-success" id="bookingSuccess" hidden>
-                <p class="booking-success__title">Запись успешно принята</p>
-                <p class="booking-success__text">Вам позвонят в ближайшее время для подтверждения времени приёма.</p>
-                <button type="button" class="btn btn-dark" id="bookingSuccessClose">Хорошо</button>
-            </div>
-        </div>
-        <button type="button" class="booking-fab" id="bookingFab" aria-expanded="false" aria-controls="bookingPanel" title="Записаться на приём">
-            <span class="booking-fab__icon" aria-hidden="true">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.75"/>
-                    <path d="M3 9h18" stroke="currentColor" stroke-width="1.75"/>
-                    <path d="M8 2v4M16 2v4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-                    <circle cx="12" cy="15" r="1.25" fill="currentColor"/>
-                </svg>
-            </span>
-        </button>
-    </div>
-
-    <script src="{% static 'core/js/main.js' %}"></script>
-    <script src="{% static 'core/js/menu.js' %}"></script>
-    <script src="{% static 'core/js/accordion.js' %}"></script>
+  <a class="skip-link" href="#main">Перейти к содержимому</a>
+  {% include 'core/includes/header.html' %}
+  <main id="main">{% block content %}{% endblock %}</main>
+  {% include 'core/includes/footer.html' %}
+  {% include 'core/includes/booking.html' %}
 </body>
 </html>

@@ -1,198 +1,180 @@
-from django.db import OperationalError, ProgrammingError
+from datetime import timedelta
+import mimetypes
+from pathlib import Path
+
+from django.conf import settings
+from django.db.models import Prefetch, Q
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from django.utils.html import conditional_escape
-from django.utils.safestring import mark_safe
+from django.utils import timezone
+from django.utils.crypto import salted_hmac
+from django.utils._os import safe_join
+from django.core.exceptions import SuspiciousFileOperation
+from django.views.decorators.http import require_POST
 
-from .models import SiteSettings, HomePage, Case, PriceItem, Review, PatientCategory, PatientPage
-
-
-CONTACT_PHONE = '+7 499 394 34 52'
-CONTACT_PHONE_HREF = '+74993943452'
-CONTACT_TELEGRAM_URL = 'https://t.me/Opht_KutinIM'
-CONTACT_WHATSAPP_URL = 'https://wa.me/74993943452'
-CONTACT_MAX_URL = 'https://max.ru/u/f9LHodD0cOLrvB0ibZk95T51QLuO4dRf1jeg-4mAenQNMPsj4h0MNExk0QA'
-LIST_ITEM_MAX_LENGTH = 240
-SHOW_CASES_ON_HOME = False
-
-
-def get_contact_context(site_settings):
-    return {
-        'phone': CONTACT_PHONE,
-        'phone_href': CONTACT_PHONE_HREF,
-        'telegram_url': CONTACT_TELEGRAM_URL,
-        'whatsapp_url': CONTACT_WHATSAPP_URL,
-        'max_url': CONTACT_MAX_URL,
-    }
+from .content import render_content
+from .forms import BookingForm
+from .models import (
+    BookingRequest, Case, Direction, HomePage, PatientCategory, PatientPage, DoctorFact, FAQItem,
+    PriceCategory, PriceItem, ProcessStep, Qualification, Review, SitePage, SiteSettings,
+)
+from .notifications import notify_booking
 
 
-def get_site_settings():
-    try:
-        return SiteSettings.objects.defer('max_url').first()
-    except (OperationalError, ProgrammingError):
-        return None
+def published_prices():
+    return PriceItem.objects.filter(is_active=True).filter(
+        Q(category__isnull=True) | Q(category__is_published=True)
+    ).select_related('category')
 
 
 def home_view(request):
-    site_settings = get_site_settings()
-    homepage = HomePage.objects.order_by('-created_at').first()
-
-    cases = Case.objects.filter(is_published=True)[:5] if SHOW_CASES_ON_HOME else []
-    price_items = PriceItem.objects.filter(is_active=True)
-    reviews = Review.objects.filter(is_published=True, show_on_home=True)[:6]
-
-    context = {
-        'page_title': 'Главная',
-        'site_settings': site_settings,
-        'homepage': homepage,
-        'show_cases': SHOW_CASES_ON_HOME,
-        'cases': cases,
-        'price_items': price_items,
-        'reviews': reviews,
-        'nav_links': [
-            {'label': 'Обо мне', 'href': '/#about'},
-            {'label': 'Услуги и цены', 'href': reverse('core:prices')},
-            {'label': 'Отзывы', 'href': '/#reviews'},
-            {'label': 'Пациентам', 'href': reverse('core:patients')},
-        ],
-        'cta_text': site_settings.cta_text if site_settings and site_settings.cta_text else 'Запись на приём',
-    }
-    context.update(get_contact_context(site_settings))
-    return render(request, 'core/home.html', context)
-
-
-def get_nav_links():
-    return [
-        {'label': 'Обо мне', 'href': '/#about'},
-        {'label': 'Услуги и цены', 'href': reverse('core:prices')},
-        {'label': 'Отзывы', 'href': '/#reviews'},
-        {'label': 'Пациентам', 'href': reverse('core:patients')},
-    ]
+    home = HomePage.objects.order_by('-created_at').first() or HomePage()
+    featured_prices = published_prices().order_by('order', 'pk')
+    service_groups = list(PriceCategory.objects.filter(is_published=True, show_on_home=True).prefetch_related(
+        Prefetch('items', queryset=featured_prices, to_attr='visible_items')
+    )) if home.show_services else []
+    service_groups = [group for group in service_groups if group.visible_items][:8]
+    featured_pages = PatientPage.objects.filter(is_published=True, category__is_published=True).select_related('category')
+    if home.pk and home.featured_patient_pages.exists():
+        featured_pages = featured_pages.filter(pk__in=home.featured_patient_pages.values('pk'))[:6]
+    else:
+        featured_pages = featured_pages[:3]
+    return render(request, 'core/home.html', {
+        'page_title': '',
+        'directions': Direction.objects.filter(is_published=True).select_related('patient_page__category').prefetch_related(
+            Prefetch('services', queryset=featured_prices, to_attr='public_services')) if home.show_directions else [],
+        'service_groups': service_groups,
+        'doctor_facts': DoctorFact.objects.filter(is_published=True) if home.show_about else [],
+        'qualifications': Qualification.objects.filter(is_published=True) if home.show_about else [],
+        'process_steps': ProcessStep.objects.filter(is_published=True) if home.show_process else [],
+        'cases': Case.objects.filter(is_published=True)[:6] if home.show_cases else [],
+        'price_items': published_prices().filter(show_on_home=True).order_by('order', 'pk')[:6] if home.show_prices else [],
+        'reviews': Review.objects.filter(is_published=True, show_on_home=True)[:6] if home.show_reviews else [],
+        'about_html': render_content(home.about_text),
+        'featured_pages': featured_pages if home.show_patient_materials else [],
+        'faq_items': [{'question': item.question, 'answer_html': render_content(item.answer)}
+                      for item in FAQItem.objects.filter(is_published=True)] if home.show_faq else [],
+    })
 
 
 def prices_view(request):
-    site_settings = get_site_settings()
-    price_items = PriceItem.objects.filter(is_active=True)
-
-    context = {
-        'page_title': 'Услуги и цены',
-        'site_settings': site_settings,
-        'price_items': price_items,
-        'nav_links': get_nav_links(),
-        'cta_text': site_settings.cta_text if site_settings and site_settings.cta_text else 'Запись на приём',
-    }
-    context.update(get_contact_context(site_settings))
-    return render(request, 'core/prices.html', context)
+    active = published_prices().order_by('order', 'pk')
+    groups = list(PriceCategory.objects.filter(is_published=True).prefetch_related(
+        Prefetch('items', queryset=active, to_attr='visible_items')
+    ))
+    groups = [group for group in groups if group.visible_items]
+    return render(request, 'core/prices.html', {
+        'page_title': 'Услуги и цены', 'price_groups': groups,
+        'uncategorized_prices': active.filter(category__isnull=True),
+        'has_prices': active.exists(), 'active_nav': 'prices',
+    })
 
 
 def patients_view(request):
-    site_settings = get_site_settings()
-    patient_categories = PatientCategory.objects.filter(
-        is_published=True,
-        pages__is_published=True,
-    ).prefetch_related('pages').distinct()
-
-    context = {
-        'page_title': 'Пациентам',
-        'site_settings': site_settings,
-        'patient_categories': patient_categories,
-        'nav_links': get_nav_links(),
-        'cta_text': site_settings.cta_text if site_settings and site_settings.cta_text else 'Запись на приём',
-    }
-    context.update(get_contact_context(site_settings))
-    return render(request, 'core/patients.html', context)
-
-
-def split_patient_text_blocks(value):
-    blocks = []
-    current = []
-
-    for raw_line in str(value or '').replace('\r\n', '\n').split('\n'):
-        line = raw_line.strip()
-        if line:
-            current.append(line)
-            continue
-
-        if current:
-            blocks.append('\n'.join(current))
-            current = []
-
-    if current:
-        blocks.append('\n'.join(current))
-
-    return blocks
-
-
-def is_patient_list_item(block):
-    if '\n' in block:
-        return False
-    if len(block) > LIST_ITEM_MAX_LENGTH:
-        return False
-    if block.endswith(':'):
-        return False
-    return True
-
-
-def render_patient_text(value):
-    blocks = split_patient_text_blocks(value)
-    rendered = []
-    index = 0
-
-    while index < len(blocks):
-        block = blocks[index]
-        previous = blocks[index - 1] if index else ''
-        should_start_list = (
-            is_patient_list_item(block)
-            and (
-                previous.endswith(':')
-                or (
-                    index + 1 < len(blocks)
-                    and is_patient_list_item(blocks[index + 1])
-                )
-            )
-        )
-
-        if should_start_list:
-            items = []
-            while index < len(blocks) and is_patient_list_item(blocks[index]):
-                items.append(blocks[index])
-                index += 1
-            list_items = ''.join(f'<li>{conditional_escape(item)}</li>' for item in items)
-            rendered.append(f'<ul class="patient-bullet-list">{list_items}</ul>')
-            continue
-
-        paragraph = conditional_escape(block).replace('\n', '<br>')
-        rendered.append(f'<p>{paragraph}</p>')
-        index += 1
-
-    return mark_safe('\n'.join(rendered))
+    pages = PatientPage.objects.filter(is_published=True).order_by('order', 'pk')
+    categories = PatientCategory.objects.filter(is_published=True).prefetch_related(
+        Prefetch('pages', queryset=pages, to_attr='visible_pages')
+    )
+    return render(request, 'core/patients.html', {
+        'page_title': 'Пациентам', 'active_nav': 'patients',
+        'patient_categories': [category for category in categories if category.visible_pages],
+    })
 
 
 def patient_page_detail_view(request, slug):
-    site_settings = get_site_settings()
-    patient_page = get_object_or_404(
+    page = get_object_or_404(
         PatientPage.objects.select_related('category').prefetch_related('sections'),
-        slug=slug,
-        is_published=True,
-        category__is_published=True,
+        slug=slug, is_published=True, category__is_published=True,
     )
-    sections = [
-        {
-            'id': section.id,
-            'title': section.title,
-            'content_html': render_patient_text(section.content),
-        }
-        for section in patient_page.sections.all()
-    ]
+    sections = [{'id': part.pk, 'title': part.title, 'content_html': render_content(part.content)}
+                for part in page.sections.all()]
+    related = PatientPage.objects.filter(category=page.category, is_published=True).exclude(pk=page.pk)[:3]
+    return render(request, 'core/patient_page_detail.html', {
+        'page_title': page.title, 'page_description': page.seo_description or page.description[:280],
+        'patient_page': page, 'description_html': render_content(page.description),
+        'sections': sections, 'related_pages': related, 'active_nav': 'patients',
+    })
 
-    context = {
-        'page_title': patient_page.title,
-        'site_settings': site_settings,
-        'patient_page': patient_page,
-        'description_html': render_patient_text(patient_page.description),
-        'sections': sections,
-        'nav_links': get_nav_links(),
-        'cta_text': site_settings.cta_text if site_settings and site_settings.cta_text else 'Запись на приём',
-    }
-    context.update(get_contact_context(site_settings))
-    return render(request, 'core/patient_page_detail.html', context)
+
+def site_page_view(request, slug):
+    page = get_object_or_404(SitePage, slug=slug, is_published=True)
+    return render(request, 'core/site_page.html', {
+        'page_title': page.title, 'page_description': page.seo_description,
+        'document': page, 'body_html': render_content(page.body),
+    })
+
+
+@require_POST
+def booking_view(request):
+    if len(request.body) > 8192:
+        return JsonResponse({'ok': False, 'error': 'Слишком большой запрос.'}, status=413)
+    site = SiteSettings.objects.order_by('pk').first()
+    privacy = SitePage.objects.filter(slug='privacy', is_published=True).exists()
+    consent = SitePage.objects.filter(slug='consent', is_published=True).first()
+    if not site or not site.booking_enabled or not consent or not (privacy or site.privacy_policy_url):
+        return JsonResponse({'ok': False, 'error': 'Онлайн-запись пока недоступна. Используйте контакты на сайте.'}, status=503)
+    form = BookingForm(request.POST)
+    if not form.is_valid():
+        messages = {
+            'name': 'Укажите имя длиной от 2 до 120 символов.',
+            'phone': 'Проверьте номер телефона.',
+            'consent': 'Подтвердите согласие на обработку данных.',
+        }
+        return JsonResponse({'ok': False, 'errors': {key: messages.get(key, 'Проверьте поле.') for key in form.errors}}, status=400)
+    if form.cleaned_data['website']:
+        return JsonResponse({'ok': False, 'error': 'Не удалось отправить форму.'}, status=400)
+    # Use only the trusted direct peer address; never trust a client-supplied forwarded-for header.
+    peer = request.META.get('REMOTE_ADDR', '')
+    throttle = salted_hmac('booking-peer', peer, secret=settings.SECRET_KEY).hexdigest()
+    recent = BookingRequest.objects.filter(created_at__gte=timezone.now() - timedelta(minutes=10))
+    duplicate = recent.filter(phone=form.cleaned_data['phone'], throttle_key=throttle).first()
+    if duplicate:
+        return JsonResponse({'ok': True})
+    if recent.filter(throttle_key=throttle).count() >= settings.BOOKING_RATE_LIMIT:
+        return JsonResponse({'ok': False, 'error': 'Слишком много заявок. Попробуйте немного позже или позвоните.'}, status=429)
+    booking = BookingRequest.objects.create(
+        name=form.cleaned_data['name'], phone=form.cleaned_data['phone'], consent=True,
+        consent_document=consent.get_absolute_url(), throttle_key=throttle,
+    )
+    # The request is durable before attempting an external notification.
+    notify_booking(booking)
+    return JsonResponse({'ok': True}, status=201)
+
+
+def robots_view(request):
+    return HttpResponse('User-agent: *\nDisallow: /admin/\nDisallow: /booking/\nSitemap: '
+                        + request.build_absolute_uri(reverse('core:sitemap')) + '\n', content_type='text/plain')
+
+
+def sitemap_view(request):
+    paths = [reverse('core:home'), reverse('core:prices'), reverse('core:patients')]
+    paths.extend(page.get_absolute_url() for page in PatientPage.objects.filter(is_published=True, category__is_published=True))
+    paths.extend(page.get_absolute_url() for page in SitePage.objects.filter(is_published=True))
+    return render(request, 'core/sitemap.xml', {'urls': [request.build_absolute_uri(path) for path in paths]},
+                  content_type='application/xml')
+
+
+def not_found_view(request, exception):
+    return render(request, 'core/404.html', {'page_title': 'Страница не найдена'}, status=404)
+
+
+def health_view(request):
+    from django.db import connection
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT 1')
+    return JsonResponse({'status': 'ok'})
+
+
+def media_view(request, path):
+    """Public images and approved PDF documents, including after DEBUG is disabled."""
+    try:
+        file_path = Path(safe_join(settings.MEDIA_ROOT, path))
+    except SuspiciousFileOperation as exc:
+        raise Http404 from exc
+    if file_path.suffix.lower() not in {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif', '.pdf', '.ico'} or not file_path.is_file():
+        raise Http404
+    response = FileResponse(file_path.open('rb'), content_type=mimetypes.guess_type(file_path.name)[0] or 'application/octet-stream')
+    response['Cache-Control'] = 'public, max-age=86400'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response

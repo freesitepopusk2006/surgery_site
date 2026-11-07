@@ -1,0 +1,12 @@
+{% load static %}
+<section class="container hero" aria-labelledby="heroTitle">
+  <div class="hero-copy">
+    {% if homepage.hero_kicker %}<p class="eyebrow hero-kicker">{{ homepage.hero_kicker }}</p>{% endif %}
+    <h1 id="heroTitle">{{ homepage.hero_title|linebreaksbr }}</h1>
+    {% if homepage.hero_intro %}<p class="hero-intro">{{ homepage.hero_intro|linebreaksbr }}</p>{% endif %}
+    <div class="hero-actions"><button type="button" class="button" data-booking-open>{{ site_settings.cta_text }} <span aria-hidden="true">↗</span></button>{% if has_about %}<a class="text-link" href="#about">О враче <span aria-hidden="true">→</span></a>{% endif %}</div>
+    {% if site_settings.doctor_name %}<div class="hero-signature"><p>{{ site_settings.doctor_name }}</p>{% if site_settings.specialty %}<span>{{ site_settings.specialty }}</span>{% endif %}</div>{% endif %}
+  </div>
+  {% if homepage.hero_image %}<figure class="hero-visual position-{{ homepage.hero_image_position }}"><img src="{{ homepage.hero_image.url }}" alt="{{ homepage.hero_image_alt }}" fetchpriority="high" width="800" height="1000"></figure>{% elif homepage.use_default_artwork %}<figure class="hero-visual"><img src="{% static 'core/img/iris.png' %}" alt="" fetchpriority="high" width="1200" height="1500"></figure>{% endif %}
+</section>
+<div class="container home-jump-links"><span class="eyebrow">На этой странице</span><nav aria-label="Разделы главной">{% if has_directions %}<a href="#directions">Направления <span aria-hidden="true">↓</span></a>{% endif %}{% if has_about %}<a href="#about">О враче <span aria-hidden="true">↓</span></a>{% endif %}{% if homepage.show_process %}{% if process_steps or homepage.show_placeholders %}<a href="#approach">Как проходит обращение <span aria-hidden="true">↓</span></a>{% endif %}{% endif %}{% if has_clinic %}<a href="#clinic">Клиника <span aria-hidden="true">↓</span></a>{% endif %}{% if homepage.show_prices %}{% if price_items or homepage.show_placeholders %}<a href="#prices">Стоимость <span aria-hidden="true">↓</span></a>{% endif %}{% endif %}{% if has_reviews %}<a href="#reviews">Отзывы <span aria-hidden="true">↓</span></a>{% endif %}</nav></div>

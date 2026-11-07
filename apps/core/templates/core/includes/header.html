@@ -1,26 +1,24 @@
-<header class="site-header">
-    <div class="header-inner">
-        <a href="/" class="header-logo">
-            {% if site_settings and site_settings.logo %}
-                <img src="{{ site_settings.logo.url }}" alt="Логотип">
-            {% else %}
-                <span>Icon</span>
-            {% endif %}
-        </a>
-
-        <nav class="header-nav">
-            {% for link in nav_links %}
-                <a href="{{ link.href }}" class="header-link">{{ link.label }}</a>
-            {% endfor %}
-        </nav>
-
-        <div class="header-actions">
-            <a href="tel:{{ phone_href }}" class="header-phone">
-                {{ phone }}
-            </a>
-            <a href="#" class="btn btn-dark header-cta">
-                {{ cta_text }}
-            </a>
-        </div>
+<header class="site-header" id="siteHeader">
+  <div class="container header-inner">
+    <a class="brand" href="{% url 'core:home' %}" aria-label="{{ brand_name }} — главная">
+      {% if site_settings.logo %}<img class="brand-logo" src="{{ site_settings.logo.url }}" alt="" width="40" height="40">{% endif %}
+      <span class="brand-copy"><span class="brand-name">{{ brand_name }}</span>{% if site_settings.specialty %}<span class="brand-specialty">{{ site_settings.specialty }}</span>{% endif %}</span>
+    </a>
+    <nav class="desktop-nav" aria-label="Основная навигация">
+      {% for link in nav_links %}<a href="{{ link.href }}"{% if active_nav == link.key %} aria-current="page"{% endif %}>{{ link.label }}</a>{% endfor %}
+    </nav>
+    <div class="header-actions">
+      {% if site_settings.phone %}<a class="header-phone" href="tel:{{ phone_href }}">{{ site_settings.phone }}</a>{% endif %}
+      <button class="button button-small header-booking" type="button" data-booking-open>{{ site_settings.cta_text }}</button>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobileMenu" aria-label="Открыть меню" id="menuToggle"><span></span><span></span></button>
     </div>
+  </div>
+  <div class="mobile-menu" id="mobileMenu" hidden>
+    <nav class="container" aria-label="Мобильная навигация">
+      {% for link in nav_links %}<a href="{{ link.href }}">{{ link.label }} <span aria-hidden="true">↗</span></a>{% endfor %}
+      {% if has_clinic %}<a href="{% url 'core:home' %}#clinic">Контакты <span aria-hidden="true">↗</span></a>{% endif %}
+      {% if site_settings.phone %}<a href="tel:{{ phone_href }}">{{ site_settings.phone }}</a>{% endif %}
+      <button type="button" class="button" data-booking-open>{{ site_settings.cta_text }} <span aria-hidden="true">↗</span></button>
+    </nav>
+  </div>
 </header>
