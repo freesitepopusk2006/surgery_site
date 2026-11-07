@@ -2,7 +2,7 @@
   <div class="section-label"><span class="eyebrow">03 / О враче</span>{% include 'core/includes/edit_section.html' with admin_url='admin:core_homepage_changelist' %}</div>
   <div class="section-main"><header class="section-heading"><h2>{{ homepage.about_title }}</h2></header>
     <div class="about-layout{% if not homepage.about_photo and not homepage.show_placeholders %} about-layout-text{% endif %}">
-      {% if homepage.about_photo %}<figure class="about-photo"><img src="{{ homepage.about_photo.url }}" alt="{{ site_settings.doctor_name }}" loading="lazy" width="640" height="800"></figure>{% elif homepage.show_placeholders %}<div class="about-photo portrait-scaffold" role="img" aria-label="Место для портрета врача"><span class="portrait-shape" aria-hidden="true"></span><span class="scaffold-photo-caption">Портрет врача</span></div>{% endif %}
+      {% if homepage.about_photo %}<figure class="about-photo" style="--portrait-focus-y: {{ homepage.about_photo_focus_y }}%"><img src="{{ homepage.about_photo.url }}" alt="{{ site_settings.doctor_name }}" loading="lazy" width="640" height="800"></figure>{% elif homepage.show_placeholders %}<div class="about-photo portrait-scaffold" role="img" aria-label="Место для портрета врача"><span class="portrait-shape" aria-hidden="true"></span><span class="scaffold-photo-caption">Портрет врача</span></div>{% endif %}
       <div class="doctor-biography">
         {% if site_settings.doctor_name %}<h3 class="doctor-name">{{ site_settings.doctor_name }}</h3>{% elif homepage.show_placeholders %}<h3 class="doctor-name">О враче</h3>{% endif %}
         {% if site_settings.specialty %}<p class="doctor-specialty">{{ site_settings.specialty }}</p>{% endif %}

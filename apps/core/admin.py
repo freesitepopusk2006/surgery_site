@@ -171,7 +171,7 @@ class HomePageAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
             'description': 'Категории и услуги берутся из прайса. В направлениях можно выбрать варианты услуг и тип отображения.'
         }),
         ('Обо мне', {
-            'fields': ('about_title', 'about_text', 'about_photo_preview', 'about_photo')
+            'fields': ('about_title', 'about_text', 'about_photo_preview', 'about_photo', 'about_photo_focus_y')
         }),
         ('Этапы обращения', {
             'fields': ('process_title', 'process_description', 'process_image'),
@@ -181,7 +181,7 @@ class HomePageAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
             'fields': ('cases_title', 'cases_description')
         }),
         ('Клиника', {
-            'fields': ('clinic_title', 'clinic_description', 'clinic_photo', 'clinic_directions'),
+            'fields': ('clinic_title', 'clinic_description', 'clinic_directions'),
             'description': 'Адрес, название клиники и ссылка на маршрут — в общих настройках сайта.'
         }),
         ('Стоимость', {
@@ -196,9 +196,9 @@ class HomePageAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
             'description': 'Вопросы добавляются в разделе «Вопросы и ответы».'
         }),
         ('Финальный блок', {'fields': ('final_title', 'final_text')}),
-        ('Изображение прежней версии', {
-            'fields': ('hero_background_preview', 'hero_background'), 'classes': ('collapse',),
-            'description': 'Архивное поле. Для нового дизайна используйте изображение первого экрана выше.'
+        ('Изображения прежней версии', {
+            'fields': ('hero_background_preview', 'hero_background', 'clinic_photo'), 'classes': ('collapse',),
+            'description': 'Архивные поля. Первый экран использует отдельное изображение; блок клиники — карту и описание.'
         }),
     )
 

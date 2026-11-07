@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import FileExtensionValidator
+from django.core.validators import FileExtensionValidator, MinValueValidator, MaxValueValidator
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from .validators import validate_map_embed_url
@@ -106,6 +106,9 @@ class SiteSettings(models.Model):
 
 
 class HomePage(models.Model):
+    about_photo_focus_y = models.PositiveSmallIntegerField('Положение портрета по вертикали, %', default=50,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text='0 — верх кадра, 50 — центр, 100 — низ. Позволяет настроить кадр без изменения исходного фото.')
     show_placeholders = models.BooleanField('Показывать заготовки пустых разделов', default=True,
         help_text='Сохраняет полную композицию до наполнения. Заготовки не содержат вымышленных данных. '
                   'После заполнения можно выключить: незаполненные разделы будут скрыты.')
