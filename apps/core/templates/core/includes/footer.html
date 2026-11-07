@@ -7,8 +7,19 @@
     <div class="footer-body">
       <div class="footer-identity"><a href="{% url 'core:home' %}" class="footer-name">{{ site_settings.doctor_name|default:brand_name }}</a>{% if site_settings.specialty %}<p>{{ site_settings.specialty }}</p>{% endif %}{% if site_settings.footer_note %}<p class="footer-note">{{ site_settings.footer_note|linebreaksbr }}</p>{% endif %}</div>
       <div class="footer-contact">{% if site_settings.phone %}<a href="tel:{{ phone_href }}">{{ site_settings.phone }}</a>{% endif %}{% if site_settings.contact_email %}<a class="footer-email" href="mailto:{{ site_settings.contact_email }}">{{ site_settings.contact_email }}</a>{% endif %}{% if site_settings.address %}<p>{{ site_settings.address }}</p>{% endif %}{% if site_settings.opening_hours %}<p>{{ site_settings.opening_hours }}</p>{% endif %}</div>
-      {% if social_links %}<div class="footer-socials">{% for link in social_links %}<a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.label }} <span aria-hidden="true">↗</span></a>{% endfor %}</div>{% endif %}
+      {% if site_settings.vk_url %}<div class="footer-socials"><a href="{{ site_settings.vk_url }}" target="_blank" rel="noopener noreferrer">VK <span aria-hidden="true">↗</span></a></div>{% endif %}
     </div>
-    <div class="footer-bottom"><span>© {% now 'Y' %} {{ brand_name }}</span><div>{% if privacy_url %}<a href="{{ privacy_url }}">Политика конфиденциальности</a>{% endif %}{% for document in site_documents %}{% if document.slug != 'privacy' %}<a href="{{ document.get_absolute_url }}">{{ document.title }}</a>{% endif %}{% endfor %}</div></div>
+    <div class="footer-bottom">
+      <span>© {% now 'Y' %} {{ brand_name }}</span>
+      <div class="footer-bottom-actions">
+        {% if privacy_url or site_documents %}<div class="footer-document-links">{% if privacy_url %}<a href="{{ privacy_url }}">Политика конфиденциальности</a>{% endif %}{% for document in site_documents %}{% if document.slug != 'privacy' %}<a href="{{ document.get_absolute_url }}">{{ document.title }}</a>{% endif %}{% endfor %}</div>{% endif %}
+        <nav class="footer-messengers" aria-label="Написать в мессенджер">
+          {% for link in footer_messengers %}
+            {% if link.url %}<a class="footer-messenger" href="{{ link.url }}" target="_blank" rel="noopener noreferrer" aria-label="Написать в {{ link.label }}" title="{{ link.label }}">{% include 'core/includes/messenger_icon.html' with kind=link.kind %}</a>
+            {% else %}<span class="footer-messenger is-placeholder" role="img" aria-label="{{ link.label }}: ссылка пока не добавлена" title="{{ link.label }}: ссылка пока не добавлена">{% include 'core/includes/messenger_icon.html' with kind=link.kind %}</span>{% endif %}
+          {% endfor %}
+        </nav>
+      </div>
+    </div>
   </div>
 </footer>

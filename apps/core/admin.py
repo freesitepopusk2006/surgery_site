@@ -131,7 +131,9 @@ class SiteSettingsAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
                            'а не весь HTML. Адрес и маршрут редактируются в группе контактов.'
         }),
         ('Социальные сети', {
-            'fields': ('telegram_url', 'whatsapp_url', 'max_url', 'vk_url'), 'classes': ('collapse',)
+            'fields': ('telegram_url', 'whatsapp_url', 'max_url', 'vk_url'), 'classes': ('collapse',),
+            'description': 'WhatsApp, MAX и Telegram выводятся значками в самом низу сайта. '
+                           'Вставьте HTTPS-ссылки на нужные чаты. Пока поле пустое, значок показан как неактивная заготовка.'
         }),
         ('Заявки и почта', {
             'fields': ('booking_enabled', 'notification_email', 'booking_title', 'booking_intro', 'booking_success_text'),
@@ -343,8 +345,22 @@ class PatientCategoryAdmin(EditorialAdminMixin, admin.ModelAdmin):
     search_fields = ('title',)
 
 
+class PatientPageSectionInlineForm(forms.ModelForm):
+    class Meta:
+        model = PatientPageSection
+        fields = ('page', 'title', 'content', 'order')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk and not self.instance.content:
+            self.fields['content'].required = False
+            self.fields['content'].help_text = ('Пустой раздел из прежней версии. Его можно заполнить позже; '
+                                               'пока он не выводится в статье и оглавлении.')
+
+
 class PatientPageSectionInline(admin.StackedInline):
     model = PatientPageSection
+    form = PatientPageSectionInlineForm
     extra = 0
     fields = ('title', 'content', 'order')
 

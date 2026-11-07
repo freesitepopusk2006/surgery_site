@@ -31,13 +31,19 @@ def site_context(request):
     social_links = [
         {'label': label, 'url': url} for label, url in [
             ('Telegram', site.telegram_url), ('WhatsApp', site.whatsapp_url),
-            ('Max', site.max_url), ('VK', site.vk_url),
+            ('MAX', site.max_url), ('VK', site.vk_url),
         ] if url
+    ]
+    footer_messengers = [
+        {'kind': 'whatsapp', 'label': 'WhatsApp', 'url': site.whatsapp_url},
+        {'kind': 'max', 'label': 'MAX', 'url': site.max_url},
+        {'kind': 'telegram', 'label': 'Telegram', 'url': site.telegram_url},
     ]
     return {
         'site_settings': site, 'homepage': home,
         'brand_name': site.short_name or site.doctor_name or 'Офтальмология',
         'phone_href': phone_href, 'social_links': social_links, 'nav_links': nav,
+        'footer_messengers': footer_messengers,
         'privacy_url': privacy_url, 'consent_url': consent_url, 'site_documents': documents,
         'booking_available': bool(site.pk and site.booking_enabled and privacy_url and consent_url),
         'schedule_available': bool(site.pk and site.booking_enabled and site.schedule_enabled),

@@ -311,6 +311,39 @@ class AdminTests(TestCase):
             self.assertEqual(self.client.get(reverse(f'admin:core_{model}_add')).status_code, 200)
         self.assertEqual(self.client.get(reverse('admin:core_bookingrequest_changelist')).status_code, 200)
 
+    def test_legacy_empty_article_sections_do_not_block_other_edits(self):
+        from .admin import PatientPageSectionInlineForm
+        category = PatientCategory.objects.create(title='Тестовая категория', slug='legacy-category')
+        page = PatientPage.objects.create(title='Тестовая статья', slug='legacy-article', category=category,
+            description='Введение статьи')
+        section = PatientPageSection.objects.create(page=page, title='Пустая старая часть', content='')
+        data = {'page': page.pk, 'title': section.title, 'content': '', 'order': 0}
+        form = PatientPageSectionInlineForm(data=data, instance=section)
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertFalse(PatientPageSectionInlineForm(data=data).is_valid())
+        self.assertNotContains(self.client.get(page.get_absolute_url()), section.title)
+        section.refresh_from_db()
+        self.assertEqual(section.content, '')
+
+
+class FooterMessengerTests(TestCase):
+    def test_blank_contacts_show_three_noninteractive_placeholders(self):
+        SiteSettings.objects.create()
+        response = self.client.get('/')
+        self.assertContains(response, 'class="footer-messenger is-placeholder"', count=3)
+        for name in ['WhatsApp', 'MAX', 'Telegram']:
+            self.assertContains(response, f'{name}: ссылка пока не добавлена')
+        self.assertNotContains(response, 'href="#"')
+
+    def test_saved_admin_urls_become_direct_chat_links_on_all_pages(self):
+        SiteSettings.objects.create(whatsapp_url='https://wa.me/70000000000',
+            max_url='https://max.ru/test-profile', telegram_url='https://t.me/test-profile')
+        for route in ['/', '/prices/', '/patients/']:
+            response = self.client.get(route)
+            self.assertNotContains(response, 'class="footer-messenger is-placeholder"')
+            for url in ['https://wa.me/70000000000', 'https://max.ru/test-profile', 'https://t.me/test-profile']:
+                self.assertContains(response, f'class="footer-messenger" href="{url}" target="_blank" rel="noopener noreferrer"')
+
 
 @override_settings(RESEND_API_KEY='test-secret-not-real', DEFAULT_FROM_EMAIL='sender@example.com')
 class MailSetupTests(TestCase):

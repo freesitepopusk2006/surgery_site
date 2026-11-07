@@ -191,6 +191,13 @@ details[open]>summary .disclosure-sign::after { transform: rotate(0); }
 .footer-socials a { display: flex; gap: 22px; }
 .footer-bottom { padding-block: 22px 28px; border-top: 1px solid #536056; display: flex; justify-content: space-between; gap: 24px; color: #c5cec4; font-size: 11px; }
 .footer-bottom>div { display: flex; gap: 12px 24px; justify-content: flex-end; flex-wrap: wrap; max-width: 65%; }
+.footer-bottom-actions { align-items: center; }
+.footer-document-links { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; }
+.footer-messengers { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.footer-messenger { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #536056; border-radius: 50%; color: #e8ede7; transition: color var(--ease), background var(--ease), border-color var(--ease); }
+.footer-messenger svg { width: 22px; height: 22px; display: block; }
+.footer-messenger.is-placeholder { opacity: .45; }
+a.footer-messenger:hover, a.footer-messenger:focus-visible { color: var(--ink); border-color: var(--wash); background: var(--wash); }
 .site-footer a:hover { color: #d2e6d2; }
 .inner-page { padding-block: 34px var(--section-space); }
 .breadcrumbs { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; color: var(--muted); font-size: 12px; line-height: 1.5; margin-bottom: 46px; }

@@ -92,7 +92,7 @@ def patient_page_detail_view(request, slug):
         slug=slug, is_published=True, category__is_published=True,
     )
     sections = [{'id': part.pk, 'title': part.title, 'content_html': render_content(part.content)}
-                for part in page.sections.all()]
+                for part in page.sections.all() if part.content.strip()]
     related = PatientPage.objects.filter(category=page.category, is_published=True).exclude(pk=page.pk)[:3]
     return render(request, 'core/patient_page_detail.html', {
         'page_title': page.title, 'page_description': page.seo_description or page.description[:280],
