@@ -5,7 +5,7 @@ from .models import Direction, DoctorFact, HomePage, Qualification, Review, Site
 
 def site_context(request):
     site = SiteSettings.objects.order_by('pk').first() or SiteSettings()
-    home = HomePage.objects.order_by('-created_at').first() or HomePage()
+    home = HomePage.objects.order_by('-created_at', '-pk').first() or HomePage()
     documents = list(SitePage.objects.filter(is_published=True).only('title', 'slug'))
     by_slug = {page.slug: page for page in documents}
     privacy_url = site.privacy_policy_url or (
@@ -15,7 +15,7 @@ def site_context(request):
     has_about = home.show_about and bool(home.show_placeholders or home.about_text or home.about_photo or Qualification.objects.filter(is_published=True).exists() or DoctorFact.objects.filter(is_published=True).exists())
     has_directions = home.show_directions and (home.show_placeholders or Direction.objects.filter(is_published=True).exists())
     has_reviews = home.show_reviews and (home.show_placeholders or Review.objects.filter(is_published=True, show_on_home=True).exists())
-    has_clinic = home.show_clinic and bool(home.show_placeholders or site.address or site.clinic_name or home.clinic_photo or home.clinic_description)
+    has_clinic = home.show_clinic and bool(home.show_placeholders or site.address or site.clinic_name or home.clinic_photo or home.clinic_description or site.safe_map_embed_url)
     nav = []
     if has_about:
         nav.append({'label': 'О враче', 'href': reverse('core:home') + '#about', 'key': 'about'})

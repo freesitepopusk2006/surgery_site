@@ -1,9 +1,28 @@
 from django.db import models
 from django.core.validators import FileExtensionValidator
 from django.urls import reverse
+from django.core.exceptions import ValidationError
+from .validators import validate_map_embed_url
 
 
 class SiteSettings(models.Model):
+    contact_email = models.EmailField('Публичная почта центра', blank=True,
+        help_text='Показывается посетителям. Не меняет получателя заявок.')
+    map_embed_url = models.URLField('Ссылка встраивания интерактивной карты', max_length=1500, blank=True,
+        validators=[validate_map_embed_url],
+        help_text='Ссылка из src iframe Яндекс Карт или Google Maps. Маршрут укажите в отдельном поле ниже.')
+    show_map = models.BooleanField('Показывать интерактивную карту', default=True)
+
+    @property
+    def safe_map_embed_url(self):
+        if not self.show_map:
+            return ''
+        try:
+            validate_map_embed_url(self.map_embed_url)
+        except ValidationError:
+            return ''
+        return self.map_embed_url
+
     specialty = models.CharField('Специализация', max_length=180, blank=True)
     short_name = models.CharField('Имя в шапке', max_length=120, blank=True,
                                   help_text='Короткое имя или название. Полное ФИО укажите ниже.')

@@ -78,11 +78,11 @@ class EditorialAdminMixin:
 
 
 class SingleSettingsAdmin(EditorialAdminMixin, admin.ModelAdmin):
-    singleton_order = 'pk'
+    singleton_order = ('pk',)
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        selected = queryset.order_by(self.singleton_order).first()
+        selected = queryset.order_by(*self.singleton_order).first()
         return queryset.filter(pk=selected.pk) if selected else queryset.none()
 
     def has_add_permission(self, request):
@@ -92,7 +92,7 @@ class SingleSettingsAdmin(EditorialAdminMixin, admin.ModelAdmin):
         return False
 
     def changelist_view(self, request, extra_context=None):
-        selected = self.model.objects.order_by(self.singleton_order).first()
+        selected = self.model.objects.order_by(*self.singleton_order).first()
         action = 'change' if selected else 'add'
         args = [selected.pk] if selected else []
         return redirect(reverse(f'admin:{self.opts.app_label}_{self.opts.model_name}_{action}', args=args))
@@ -109,7 +109,12 @@ class SiteSettingsAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
             'description': 'Данные используются на всех страницах. Незаполненные контакты скрываются.'
         }),
         ('Контакты и клиника', {
-            'fields': ('phone', 'clinic_name', 'address', 'opening_hours', 'map_url')
+            'fields': ('phone', 'contact_email', 'clinic_name', 'address', 'opening_hours', 'map_url')
+        }),
+        ('Интерактивная карта', {
+            'fields': ('show_map', 'map_embed_url'),
+            'description': 'Карта выводится в блоке клиники. Вставьте ссылку из src официального iframe, '
+                           'а не весь HTML. Адрес и маршрут редактируются в группе контактов.'
         }),
         ('Социальные сети', {
             'fields': ('telegram_url', 'whatsapp_url', 'max_url', 'vk_url'), 'classes': ('collapse',)
@@ -134,7 +139,7 @@ class SiteSettingsAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
 
 @admin.register(HomePage)
 class HomePageAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
-    singleton_order = '-created_at'
+    singleton_order = ('-created_at', '-pk')
     filter_horizontal = ('featured_patient_pages',)
     form = HomePageAdminForm
     list_display = (

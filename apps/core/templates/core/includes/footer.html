@@ -6,7 +6,7 @@
     </div>
     <div class="footer-body">
       <div class="footer-identity"><a href="{% url 'core:home' %}" class="footer-name">{{ site_settings.doctor_name|default:brand_name }}</a>{% if site_settings.specialty %}<p>{{ site_settings.specialty }}</p>{% endif %}{% if site_settings.footer_note %}<p class="footer-note">{{ site_settings.footer_note|linebreaksbr }}</p>{% endif %}</div>
-      <div class="footer-contact">{% if site_settings.phone %}<a href="tel:{{ phone_href }}">{{ site_settings.phone }}</a>{% endif %}{% if site_settings.address %}<p>{{ site_settings.address }}</p>{% endif %}{% if site_settings.opening_hours %}<p>{{ site_settings.opening_hours }}</p>{% endif %}</div>
+      <div class="footer-contact">{% if site_settings.phone %}<a href="tel:{{ phone_href }}">{{ site_settings.phone }}</a>{% endif %}{% if site_settings.contact_email %}<a class="footer-email" href="mailto:{{ site_settings.contact_email }}">{{ site_settings.contact_email }}</a>{% endif %}{% if site_settings.address %}<p>{{ site_settings.address }}</p>{% endif %}{% if site_settings.opening_hours %}<p>{{ site_settings.opening_hours }}</p>{% endif %}</div>
       {% if social_links %}<div class="footer-socials">{% for link in social_links %}<a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.label }} <span aria-hidden="true">↗</span></a>{% endfor %}</div>{% endif %}
     </div>
     <div class="footer-bottom"><span>© {% now 'Y' %} {{ brand_name }}</span><div>{% if privacy_url %}<a href="{{ privacy_url }}">Политика конфиденциальности</a>{% endif %}{% for document in site_documents %}{% if document.slug != 'privacy' %}<a href="{{ document.get_absolute_url }}">{{ document.title }}</a>{% endif %}{% endfor %}</div></div>

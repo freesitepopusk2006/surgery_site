@@ -29,7 +29,7 @@ def published_prices():
 
 
 def home_view(request):
-    home = HomePage.objects.order_by('-created_at').first() or HomePage()
+    home = HomePage.objects.order_by('-created_at', '-pk').first() or HomePage()
     featured_prices = published_prices().order_by('order', 'pk')
     service_groups = list(PriceCategory.objects.filter(is_published=True, show_on_home=True).prefetch_related(
         Prefetch('items', queryset=featured_prices, to_attr='visible_items')

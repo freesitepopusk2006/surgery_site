@@ -13,6 +13,8 @@ from .models import (
     PriceCategory, PriceItem, ProcessStep, Qualification, Review, SitePage, SiteSettings, DoctorFact, FAQItem,
 )
 from .notifications import notify_booking
+from .validators import validate_map_embed_url
+from django.core.exceptions import ValidationError
 
 
 class EditorialPagesTests(TestCase):
@@ -316,3 +318,45 @@ class ContentFormattingTests(TestCase):
         self.assertIn('<li>Первый</li>', result)
         self.assertIn('&lt;script&gt;', result)
         self.assertNotIn('<script>', result)
+
+
+class ClinicMapTests(TestCase):
+    def setUp(self):
+        self.map_url = 'https://yandex.ru/map-widget/v1/?ll=37.1%2C55.1&z=16'
+        self.site = SiteSettings.objects.create(address='Адрес из админки', map_embed_url=self.map_url,
+            contact_email='public@example.com', notification_email='private@example.com')
+        HomePage.objects.create(show_placeholders=False)
+
+    def test_map_uses_admin_url_and_address(self):
+        response = self.client.get('/')
+        self.assertContains(response, 'class="clinic-map"')
+        self.assertContains(response, 'https://yandex.ru/map-widget/v1/?ll=37.1%2C55.1&amp;z=16')
+        self.assertContains(response, 'Карта проезда: Адрес из админки')
+
+    def test_disabled_or_empty_map_does_not_create_an_empty_frame(self):
+        self.site.show_map = False
+        self.site.save()
+        self.assertNotContains(self.client.get('/'), '<iframe')
+        self.site.show_map = True
+        self.site.map_embed_url = ''
+        self.site.save()
+        self.assertNotContains(self.client.get('/'), '<iframe')
+
+    def test_untrusted_embed_urls_are_rejected(self):
+        for value in ['javascript:alert(1)', 'http://yandex.ru/map-widget/v1/',
+                      'https://yandex.ru.evil.example/map-widget/v1/',
+                      'https://example.com/', 'https://user:password@yandex.ru/map-widget/v1/',
+                      '<iframe src="https://yandex.ru/map-widget/v1/"></iframe>']:
+            with self.assertRaises(ValidationError):
+                validate_map_embed_url(value)
+        validate_map_embed_url(self.map_url)
+        validate_map_embed_url('https://www.google.com/maps/embed?pb=test')
+
+    def test_invalid_database_value_is_not_rendered(self):
+        SiteSettings.objects.filter(pk=self.site.pk).update(map_embed_url='https://example.com/')
+        self.assertNotContains(self.client.get('/'), '<iframe')
+
+    def test_public_contact_email_never_discloses_notification_email(self):
+        response = self.client.get('/')
+        self.assertContains(response, 'mailto:public@example.com')
+        self.assertNotContains(response, 'private@example.com')

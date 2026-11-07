@@ -250,7 +250,7 @@ details[open]>summary .disclosure-sign::after { transform: rotate(0); }
 .prose h4 { font-size: 21px; }
 .article-lead { font-size: 20px; line-height: 1.65; margin-bottom: 40px; }
 .article-image { margin-bottom: 48px; }
-.article-image img { width: 100%; max-height: 560px; object-fit: cover; border-radius: 7px; }
+.article-image img { width: 100%; height: auto; object-fit: contain; border-radius: 7px; }
 .article-section { padding-top: 38px; margin-top: 38px; border-top: 1px solid var(--rule); scroll-margin-top: 116px; }
 .article-section:first-child { padding-top: 0; margin-top: 0; border: 0; }
 .article-section h2 { font-size: clamp(27px, 3.1vw, 38px); line-height: 1.2; margin-bottom: 26px; }
@@ -434,6 +434,12 @@ details[open]>summary .disclosure-sign::after { transform: rotate(0); }
   .booking-sheet { padding: 44px 24px 28px; }
   .booking-sheet>h2 { font-size: 37px; }
 }
+.clinic-map { margin-top: 36px; border-top: 1px solid var(--rule); padding-top: 28px; }
+.clinic-map iframe { display: block; width: 100%; height: clamp(320px,35vw,460px); border: 0; border-radius: 7px; background: var(--wash); }
+.clinic-map-caption { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px 24px; color: var(--muted); font-size: 12px; margin-top: 16px; }
+.clinic-map-caption>a { color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }
+.clinic-email { margin-top: 24px; overflow-wrap: anywhere; }
+.footer-email { font-size: 13px; overflow-wrap: anywhere; }
 .home-jump-links { padding-block: 24px 30px; border-top: 1px solid var(--rule); display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .home-jump-links>nav { display: flex; flex-wrap: wrap; gap: 12px 26px; }
 .home-jump-links nav a { display: flex; gap: 14px; font-size: 12px; color: var(--muted); }
