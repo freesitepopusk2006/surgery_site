@@ -1,0 +1,26 @@
+{% extends "admin/change_form.html" %}
+
+{% block content %}
+  {% if booking_checks %}
+    <section class="module booking-setup" aria-labelledby="bookingSetupTitle">
+      <h2 id="bookingSetupTitle">Готовность заявок и почты</h2>
+      <ul class="booking-checks">
+        {% for label, ready in booking_checks %}
+          <li><strong>{% if ready %}Готово{% else %}Нужно настроить{% endif %}</strong> — {{ label }}</li>
+        {% endfor %}
+      </ul>
+      <p>Проверка использует сохранённые настройки. Сначала сохраните изменения в форме ниже.</p>
+      {% if mail_test_ready %}
+        <form method="post" action="{{ test_email_url }}">
+          {% csrf_token %}
+          <p>Получатель тестового письма: <strong>{{ saved_notification_email }}</strong>.</p>
+          <button type="submit" class="button">Отправить тестовое письмо</button>
+        </form>
+      {% else %}
+        <p>Для тестового письма нужны получатель, RESEND_API_KEY и DEFAULT_FROM_EMAIL. Секретный ключ задаётся на сервере.</p>
+      {% endif %}
+      <p>Тест не создаёт заявку. Приём письма сервисом не подтверждает попадание во входящие — проверьте почтовый ящик.</p>
+    </section>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

@@ -1,9 +1,11 @@
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import Mock, patch
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
@@ -12,7 +14,7 @@ from .models import (
     BookingRequest, Direction, HomePage, PatientCategory, PatientPage, PatientPageSection,
     PriceCategory, PriceItem, ProcessStep, Qualification, Review, SitePage, SiteSettings, DoctorFact, FAQItem,
 )
-from .notifications import notify_booking
+from .notifications import notify_booking, send_test_notification
 from .validators import validate_map_embed_url
 from django.core.exceptions import ValidationError
 
@@ -306,6 +308,96 @@ class AdminTests(TestCase):
         for model in ['direction', 'processstep', 'qualification', 'pricecategory', 'sitepage', 'priceitem', 'doctorfact', 'faqitem']:
             self.assertEqual(self.client.get(reverse(f'admin:core_{model}_add')).status_code, 200)
         self.assertEqual(self.client.get(reverse('admin:core_bookingrequest_changelist')).status_code, 200)
+
+
+@override_settings(RESEND_API_KEY='test-secret-not-real', DEFAULT_FROM_EMAIL='sender@example.com')
+class MailSetupTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_superuser(username='mail-admin', password='test-only-password')
+        cls.site = SiteSettings.objects.create(notification_email='recipient@example.com', contact_email='public@example.com')
+
+    def setUp(self):
+        self.client.force_login(self.user)
+        self.url = reverse('admin:core_sitesettings_test_email', args=[self.site.pk])
+        self.change_url = reverse('admin:core_sitesettings_change', args=[self.site.pk])
+
+    def provider_response(self, body=b'{"id":"test-message"}'):
+        response = Mock(status=200)
+        response.read.return_value = body
+        context = Mock()
+        context.__enter__ = Mock(return_value=response)
+        context.__exit__ = Mock(return_value=False)
+        return context
+
+    def test_saved_readiness_and_test_button_do_not_expose_key(self):
+        response = self.client.get(self.change_url)
+        self.assertContains(response, 'Отправить тестовое письмо')
+        self.assertNotContains(response, 'test-secret-not-real')
+        checks = dict(response.context['booking_checks'])
+        self.assertTrue(checks['Почта получателя сохранена'])
+        self.assertFalse(checks['Согласие опубликовано (slug: consent)'])
+        SitePage.objects.create(title='Согласие', slug='consent', body='Тест', is_published=True)
+        checks = dict(self.client.get(self.change_url).context['booking_checks'])
+        self.assertTrue(checks['Согласие опубликовано (slug: consent)'])
+
+    def test_admin_test_sends_only_to_saved_private_recipient_without_a_lead(self):
+        with patch('apps.core.notifications.urlopen', return_value=self.provider_response()) as send:
+            response = self.client.post(self.url, {'notification_email': 'ignored@example.com'}, follow=True)
+        self.assertContains(response, 'Почтовый сервис принял тестовое письмо')
+        payload = json.loads(send.call_args.args[0].data)
+        self.assertEqual(payload['to'], ['recipient@example.com'])
+        self.assertEqual(payload['from'], 'sender@example.com')
+        self.assertFalse(BookingRequest.objects.exists())
+
+    def test_test_send_requires_post_csrf_and_change_permission(self):
+        with patch('apps.core.notifications.urlopen') as send:
+            self.assertEqual(self.client.get(self.url).status_code, 405)
+            csrf_client = Client(enforce_csrf_checks=True)
+            csrf_client.force_login(self.user)
+            self.assertEqual(csrf_client.post(self.url).status_code, 403)
+            viewer = get_user_model().objects.create_user(username='viewer', is_staff=True)
+            viewer.user_permissions.add(Permission.objects.get(codename='view_sitesettings'))
+            self.client.force_login(viewer)
+            self.assertEqual(self.client.post(self.url).status_code, 403)
+            send.assert_not_called()
+
+    @override_settings(RESEND_API_KEY='')
+    def test_missing_server_configuration_does_not_attempt_delivery(self):
+        with patch('apps.core.notifications.urlopen') as send:
+            response = self.client.post(self.url, follow=True)
+        self.assertContains(response, 'Укажите почту получателя')
+        self.assertNotContains(response, 'Отправить тестовое письмо')
+        send.assert_not_called()
+
+    def test_malformed_provider_response_is_a_visible_failure_and_keeps_lead(self):
+        for body in [b'[]', b'null', b'{"id":false}', b'not-json']:
+            with self.subTest(body=body):
+                booking = BookingRequest.objects.create(name='Тест', phone='+79001234567', consent=True)
+                with patch('apps.core.notifications.urlopen', return_value=self.provider_response(body)):
+                    self.assertEqual(notify_booking(booking), BookingRequest.Notification.FAILED)
+                booking.refresh_from_db()
+                self.assertEqual(booking.notification_status, BookingRequest.Notification.FAILED)
+
+    def test_provider_rejection_has_safe_actionable_error(self):
+        failure = HTTPError('https://api.resend.com/emails', 403, 'private provider response', {}, None)
+        with patch('apps.core.notifications.urlopen', side_effect=failure):
+            status, error = send_test_notification(self.site)
+        self.assertEqual(status, BookingRequest.Notification.FAILED)
+        self.assertIn('onboarding@resend.dev', error)
+        self.assertNotIn('private provider response', error)
+        self.assertLessEqual(len(error), 255)
+
+    def test_retry_is_idempotent_but_changing_recipient_changes_delivery_key(self):
+        booking = BookingRequest.objects.create(name='Тест', phone='+79001234567', consent=True)
+        with patch('apps.core.notifications.urlopen', return_value=self.provider_response()) as send:
+            notify_booking(booking)
+            first = send.call_args.args[0].get_header('Idempotency-key')
+            notify_booking(booking)
+            self.assertEqual(send.call_args.args[0].get_header('Idempotency-key'), first)
+            SiteSettings.objects.filter(pk=self.site.pk).update(notification_email='new@example.com')
+            notify_booking(booking)
+            self.assertNotEqual(send.call_args.args[0].get_header('Idempotency-key'), first)
 
 
 class ContentFormattingTests(TestCase):

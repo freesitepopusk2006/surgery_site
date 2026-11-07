@@ -1,8 +1,13 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django import forms
+from django.conf import settings
+from django.core.exceptions import PermissionDenied
+from django.http import Http404
 from django.utils.html import format_html
 from django.shortcuts import redirect
-from django.urls import reverse
+from django.urls import path, reverse
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_POST
 from .models import (
     SiteSettings,
     HomePage,
@@ -101,6 +106,7 @@ class SingleSettingsAdmin(EditorialAdminMixin, admin.ModelAdmin):
 @admin.register(SiteSettings)
 class SiteSettingsAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
     form = SiteSettingsAdminForm
+    change_form_template = 'admin/core/sitesettings/change_form.html'
     list_display = ('doctor_name', 'phone', 'created_at')
     readonly_fields = ('logo_preview',)
     fieldsets = (
@@ -131,6 +137,45 @@ class SiteSettingsAdmin(ImagePreviewAdminMixin, SingleSettingsAdmin):
             'fields': ('site_description', 'footer_note', 'privacy_policy_url'), 'classes': ('collapse',)
         }),
     )
+
+    def get_urls(self):
+        return [path('<path:object_id>/test-email/', self.admin_site.admin_view(self.test_email_view),
+                     name='core_sitesettings_test_email')] + super().get_urls()
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        site = self.get_object(request, object_id)
+        if site and self.has_change_permission(request, site):
+            checks = [
+                ('Приём заявок включён', site.booking_enabled),
+                ('Почта получателя сохранена', bool(site.notification_email)),
+                ('Ключ Resend задан на сервере', bool(settings.RESEND_API_KEY)),
+                ('Адрес отправителя задан на сервере', bool(settings.DEFAULT_FROM_EMAIL)),
+                ('Политика опубликована или указана внешняя ссылка', bool(site.privacy_policy_url)
+                 or SitePage.objects.filter(slug='privacy', is_published=True).exists()),
+                ('Согласие опубликовано (slug: consent)',
+                 SitePage.objects.filter(slug='consent', is_published=True).exists()),
+            ]
+            extra_context = {**(extra_context or {}), 'booking_checks': checks,
+                'mail_test_ready': bool(site.notification_email and settings.RESEND_API_KEY and settings.DEFAULT_FROM_EMAIL),
+                'saved_notification_email': site.notification_email,
+                'test_email_url': reverse('admin:core_sitesettings_test_email', args=[site.pk])}
+        return super().change_view(request, object_id, form_url, extra_context)
+
+    @method_decorator(require_POST)
+    def test_email_view(self, request, object_id):
+        site = self.get_object(request, object_id)
+        if not site:
+            raise Http404
+        if not self.has_change_permission(request, site):
+            raise PermissionDenied
+        from .notifications import send_test_notification
+        status, error = send_test_notification(site)
+        if status == BookingRequest.Notification.SENT:
+            self.message_user(request, f'Почтовый сервис принял тестовое письмо для {site.notification_email}. '
+                              'Проверьте входящие и спам.', level=messages.SUCCESS)
+        else:
+            self.message_user(request, error, level=messages.ERROR)
+        return redirect(reverse('admin:core_sitesettings_change', args=[site.pk]))
 
     @admin.display(description='Текущий логотип')
     def logo_preview(self, obj):

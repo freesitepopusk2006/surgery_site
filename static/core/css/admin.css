@@ -23,6 +23,10 @@ html[data-theme="dark"] { --link-fg: #a2c9b3; }
 fieldset.module { margin-bottom: 28px; }
 .form-row { padding-block: 18px; }
 .help { max-width: 780px; line-height: 1.6; }
+.booking-setup { padding-bottom: 16px; }
+.booking-setup p, .booking-setup form { margin-inline: 16px; }
+.booking-setup form p { margin-inline: 0; }
+.booking-checks { margin: 16px; padding-left: 20px; line-height: 1.8; }
 textarea { min-height: 130px; max-width: 100%; line-height: 1.6; }
 input, select, textarea { border-radius: 5px; }
 .submit-row { position: sticky; bottom: 0; z-index: 10; }
