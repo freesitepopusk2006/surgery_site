@@ -1,9 +1,10 @@
 {% extends "admin/base_site.html" %}
 {% block extrahead %}{{ block.super }}{{ media }}{% endblock %}
 {% block content %}
-  <p>Выберите дни и часы. Окна будут созданы на семь дней с выбранной даты. Существующие окна и брони не изменятся.</p>
-  <form method="post">{% csrf_token %}
-    <fieldset class="module aligned">{{ form.as_p }}</fieldset>
-    <div class="submit-row"><input type="submit" class="default" value="Создать расписание"></div>
-  </form>
+  <div class="owner-form-card"><p class="owner-lead">Выберите рабочие дни и часы — свободные окна появятся автоматически.</p>
+  <p>Расписание создаётся на семь дней с выбранной даты. Существующие окна и брони сохранятся. Для работы без перерыва оставьте оба поля перерыва пустыми.</p>
+  <form method="post" class="owner-simple-form" data-dirty-form>{% csrf_token %}
+    {{ form.non_field_errors }}{% for field in form %}<div class="owner-field">{{ field.label_tag }}{{ field }}{{ field.errors }}{% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}</div>{% endfor %}
+    <div class="owner-actions"><button type="submit" class="button default">Создать расписание</button><a href="{% url 'admin:core_appointmentslot_calendar' %}">Вернуться к календарю</a></div>
+  </form></div>
 {% endblock %}

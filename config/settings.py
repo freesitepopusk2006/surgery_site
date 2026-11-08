@@ -31,7 +31,7 @@ if os.getenv('RAILWAY_PUBLIC_DOMAIN'):
     CSRF_TRUSTED_ORIGINS.append('https://' + os.environ['RAILWAY_PUBLIC_DOMAIN'])
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "apps.core.admin_site.OwnerAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",

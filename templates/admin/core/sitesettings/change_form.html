@@ -2,8 +2,8 @@
 
 {% block content %}
   {% if booking_checks %}
-    <section class="module booking-setup" aria-labelledby="bookingSetupTitle">
-      <h2 id="bookingSetupTitle">Готовность заявок и почты</h2>
+    <details class="module booking-setup owner-mail-check">
+      <summary id="bookingSetupTitle">Проверить почту и готовность формы записи</summary>
       {% if simple_mail %}
         <p><strong>Отправка без регистрации — FormSubmit.</strong> Укажите почту ниже и сохраните настройки.
           Затем нажмите «Отправить тестовое письмо» и подтвердите адрес в письме от FormSubmit.
@@ -30,7 +30,7 @@
         {% endif %}
       {% endif %}
       <p>Тест не создаёт заявку. Приём письма сервисом не подтверждает попадание во входящие — проверьте почтовый ящик.</p>
-    </section>
+    </details>
   {% endif %}
   {{ block.super }}
 {% endblock %}

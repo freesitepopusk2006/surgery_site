@@ -1,0 +1,10 @@
+{% extends "admin/base.html" %}{% load static %}
+{% block title %}{{ title }} · Кабинет владельца{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'core/css/admin.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'core/js/admin.js' %}" defer></script>{% endblock %}
+{% block branding %}<div id="site-name"><a href="{% url 'admin:index' %}">Кабинет владельца<span>Управление сайтом</span></a></div>{% endblock %}
+{% block nav-global %}{% endblock %}
+{% block nav-breadcrumbs %}
+{% if user.is_active and user.is_staff and not is_popup %}
+<nav class="owner-nav" aria-label="Разделы управления">{% for label, url in owner_navigation %}<a href="{{ url }}"{% if request.path == url %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}<a href="/" target="_blank" rel="noopener" class="owner-preview">Открыть сайт ↗</a></nav>
+{% endif %}{{ block.super }}{% endblock %}

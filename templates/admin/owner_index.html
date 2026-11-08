@@ -1,0 +1,16 @@
+{% extends "admin/base_site.html" %}
+{% block coltype %}colM{% endblock %}
+{% block content %}
+<div class="owner-dashboard">
+<p class="owner-lead">Расписание, заявки и содержимое — всё в одном месте.</p>
+<div class="owner-overview">
+{% if calendar_url %}<a class="owner-stat" href="{{ calendar_url }}"><span>Расписание на неделю ↗</span><strong>{{ free_count }}</strong><span>свободных окон в ближайшие 7 дней</span></a>{% endif %}
+{% if booking_url %}<a class="owner-stat" href="{{ booking_url }}?status__exact=new"><span>Новые заявки ↗</span><strong>{{ pending_count }}</strong><span>ожидают вашего ответа</span></a>{% endif %}
+</div>
+{% if demo_schedule %}<p class="owner-notice">В расписании есть демонстрационные окна. Они отмечены в календаре и на сайте. Реальные дни приёма добавляйте после согласования графика.</p>{% endif %}
+{% if upcoming_bookings %}<section class="owner-section"><h2>Ближайшие записи</h2><div class="owner-bookings">{% for booking in upcoming_bookings %}<a href="{% url 'admin:core_bookingrequest_change' booking.pk %}"><strong>{{ booking.appointment_start|date:"d.m · H:i" }}</strong><span>{{ booking.name }}</span><span>{{ booking.get_status_display }}{% if booking.is_demo %} · Демо{% endif %}</span></a>{% endfor %}</div></section>{% endif %}
+{% for title, cards in content_groups %}<section class="owner-section"><h2>{{ title }}</h2><div class="owner-cards">{% for card in cards %}<a class="owner-card" href="{{ card.url }}"><h3>{{ card.title }} <span>↗</span></h3><p>{{ card.description }}</p></a>{% endfor %}</div></section>{% endfor %}
+{% if user.is_superuser %}<details class="owner-advanced"><summary>Доступ к управлению</summary><p><a href="{% url 'admin:auth_user_changelist' %}">Пользователи</a> · <a href="{% url 'admin:auth_group_changelist' %}">Группы и права</a></p></details>{% endif %}
+</div>
+{% endblock %}
+{% block sidebar %}{% endblock %}

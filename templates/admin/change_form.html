@@ -1,0 +1,2 @@
+{% extends "admin/change_form.html" %}
+{% block form_top %}{{ block.super }}{% if owner_section_tabs %}<div class="owner-form-intro" data-section-tabs><p>Выберите нужный раздел. После редактирования нажмите «Сохранить».</p></div>{% endif %}{% endblock %}

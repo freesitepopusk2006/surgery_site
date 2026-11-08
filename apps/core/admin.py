@@ -10,6 +10,8 @@ from datetime import timedelta
 from datetime import datetime
 from django.http import Http404
 from django.utils.html import format_html
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.text import slugify
 from django.shortcuts import redirect
 from django.urls import path, reverse
 from django.utils.decorators import method_decorator
@@ -26,6 +28,7 @@ from .models import (
     Direction, ProcessStep, Qualification, PriceCategory, SitePage, BookingRequest, DoctorFact, FAQItem, AppointmentSlot,
 )
 from .forms import SlotGenerationForm
+from .admin_schedule import OwnerScheduleMixin, monday
 from django.template.response import TemplateResponse
 
 
@@ -42,6 +45,21 @@ class ExistingImageFormMixin:
 
 
 class SiteSettingsAdminForm(ExistingImageFormMixin, forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        wording = {
+            'notification_email': ('Куда присылать новые заявки', 'Личная почта получателя. Посетители сайта её не видят.'),
+            'contact_email': ('Почта для посетителей', 'Публичный адрес: показывается на сайте рядом с контактами.'),
+            'map_url': ('Ссылка «Построить маршрут»', 'Скопируйте ссылку на клинику из Яндекс Карт или другого сервиса.'),
+            'map_embed_url': ('Ссылка для интерактивной карты', 'Вставьте только адрес из src карты, без кода iframe.'),
+            'cta_text': ('Текст кнопки записи', 'Короткая надпись на основной кнопке сайта.'),
+            'booking_enabled': ('Принимать заявки с сайта', 'Заявки сохраняются в кабинете. Уведомления отправляются на вашу почту.'),
+            'schedule_enabled': ('Показывать запись по времени', 'Сами дни и часы меняются в разделе «Расписание».'),
+        }
+        for name, (label, help_text) in wording.items():
+            if name in self.fields:
+                self.fields[name].label, self.fields[name].help_text = label, help_text
+
     def clean_logo(self):
         return self._keep_existing_image('logo')
 
@@ -59,9 +77,53 @@ class CaseAdminForm(ExistingImageFormMixin, forms.ModelForm):
         return self._keep_existing_image('image')
 
 
-class PatientPageAdminForm(ExistingImageFormMixin, forms.ModelForm):
+class FriendlySlugForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'slug' in self.fields:
+            self.fields['slug'].required = False
+            self.fields['slug'].label = 'Адрес страницы'
+            self.fields['slug'].help_text = ('Можно оставить пустым: адрес создастся по названию. '
+                                            'У опубликованной страницы лучше сохранять прежний адрес.')
+
+    def clean_slug(self):
+        value = self.cleaned_data.get('slug')
+        if value:
+            return value
+        if self.instance.pk and self.instance.slug:
+            return self.instance.slug
+        limit = self._meta.model._meta.get_field('slug').max_length
+        base = slugify(self.cleaned_data.get('title', ''), allow_unicode=True)[:limit] or 'page'
+        value, index = base, 2
+        while self._meta.model.objects.filter(slug=value).exclude(pk=self.instance.pk).exists():
+            suffix = f'-{index}'
+            value, index = base[:limit - len(suffix)] + suffix, index + 1
+        return value
+
+
+class PatientPageAdminForm(ExistingImageFormMixin, FriendlySlugForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'category' in self.fields:
+            self.fields['category'].label = 'Раздел материалов'
+
     def clean_main_image(self):
         return self._keep_existing_image('main_image')
+
+
+class DocumentAdminForm(FriendlySlugForm):
+    purpose = forms.ChoiceField(label='Тип документа', choices=[
+        ('other', 'Другой документ'), ('privacy', 'Политика конфиденциальности'),
+        ('consent', 'Согласие на обработку персональных данных')],
+        help_text='Для политики и согласия адрес настраивается автоматически.')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['purpose'].initial = self.instance.slug if self.instance.slug in ('privacy', 'consent') else 'other'
+
+    def clean_slug(self):
+        purpose = self.cleaned_data.get('purpose')
+        return purpose if purpose in ('privacy', 'consent') else super().clean_slug()
 
 
 class ImagePreviewAdminMixin:
@@ -84,14 +146,17 @@ class ImagePreviewAdminMixin:
 
 class EditorialAdminMixin:
     save_on_top = True
-
-    class Media:
-        css = {'all': ('core/css/admin.css',)}
-        js = ('core/js/admin.js',)
+    list_per_page = 25
 
 
 class SingleSettingsAdmin(EditorialAdminMixin, admin.ModelAdmin):
     singleton_order = ('pk',)
+
+    def render_change_form(self, request, context, *args, **kwargs):
+        context['owner_section_tabs'] = True
+        context['title'] = 'Главная страница' if self.model is HomePage else 'Контакты и настройки'
+        context['subtitle'] = None
+        return super().render_change_form(request, context, *args, **kwargs)
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -339,10 +404,13 @@ class ReviewAdmin(EditorialAdminMixin, admin.ModelAdmin):
 
 @admin.register(PatientCategory)
 class PatientCategoryAdmin(EditorialAdminMixin, admin.ModelAdmin):
+    form = FriendlySlugForm
     list_display = ('title', 'order', 'is_published')
     list_editable = ('order', 'is_published')
     prepopulated_fields = {'slug': ('title',)}
     search_fields = ('title',)
+    fieldsets = (('Категория', {'fields': ('title', 'order', 'is_published')}),
+                 ('Адрес страницы', {'fields': ('slug',), 'classes': ('collapse',)}))
 
 
 class PatientPageSectionInlineForm(forms.ModelForm):
@@ -363,6 +431,8 @@ class PatientPageSectionInline(admin.StackedInline):
     form = PatientPageSectionInlineForm
     extra = 0
     fields = ('title', 'content', 'order')
+    verbose_name = 'раздел статьи'
+    verbose_name_plural = 'Разделы статьи'
 
 
 @admin.register(PatientPage)
@@ -378,7 +448,7 @@ class PatientPageAdmin(ImagePreviewAdminMixin, EditorialAdminMixin, admin.ModelA
     view_on_site = True
     fieldsets = (
         ('Основное', {
-            'fields': ('category', 'title', 'slug', 'description')
+            'fields': ('category', 'title', 'description')
         }),
         ('Изображение', {
             'fields': ('main_image_preview', 'main_image', 'image_alt')
@@ -386,7 +456,7 @@ class PatientPageAdmin(ImagePreviewAdminMixin, EditorialAdminMixin, admin.ModelA
         ('Публикация', {
             'fields': ('order', 'is_published', 'source_url', 'author_name', 'reviewed_date')
         }),
-        ('Поиск', {'fields': ('seo_description',), 'classes': ('collapse',)}),
+        ('Адрес и поиск', {'fields': ('slug', 'seo_description'), 'classes': ('collapse',)}),
     )
 
     @admin.display(description='Текущая основная картинка')
@@ -448,12 +518,16 @@ class PriceCategoryAdmin(OrderedContentAdmin):
 
 @admin.register(SitePage)
 class SitePageAdmin(EditorialAdminMixin, admin.ModelAdmin):
+    form = DocumentAdminForm
     list_display = ('title', 'slug', 'is_published')
     list_editable = ('is_published',)
     search_fields = ('title', 'body')
     prepopulated_fields = {'slug': ('title',)}
     view_on_site = True
-    fields = ('title', 'slug', 'body', 'seo_description', 'is_published')
+    fieldsets = (('Документ', {'fields': ('purpose', 'title', 'body', 'is_published')}),
+                 ('Адрес и поиск', {'fields': ('slug', 'seo_description'), 'classes': ('collapse',),
+                    'description': 'Для политики и согласия адрес определяется типом документа. '
+                                   'У остальных страниц можно оставить его пустым.'}))
 
 
 @admin.register(BookingRequest)
@@ -467,9 +541,12 @@ class BookingRequestAdmin(EditorialAdminMixin, admin.ModelAdmin):
     readonly_fields = ('created_at', 'name', 'email', 'phone', 'slot', 'appointment_start', 'appointment_duration',
                        'appointment_service', 'is_demo', 'status', 'consent', 'consent_document',
                        'notification_status', 'notification_error')
-    fields = ('created_at', 'name', 'email', 'phone', 'slot', 'appointment_start', 'appointment_duration',
-              'appointment_service', 'is_demo', 'consent', 'consent_document', 'status', 'note',
-              'notification_status', 'notification_error')
+    fieldsets = (
+        ('Пациент', {'fields': ('name', 'phone', 'email', 'note')}),
+        ('Запись', {'fields': ('status', 'appointment_start', 'appointment_duration', 'appointment_service', 'is_demo')}),
+        ('Уведомление', {'fields': ('notification_status', 'notification_error')}),
+        ('Подробности заявки', {'fields': ('created_at', 'slot', 'consent', 'consent_document'), 'classes': ('collapse',)}),
+    )
     change_form_template = 'admin/core/bookingrequest/change_form.html'
 
     def has_add_permission(self, request):
@@ -496,6 +573,10 @@ class BookingRequestAdmin(EditorialAdminMixin, admin.ModelAdmin):
             self.cancel_bookings(request, queryset)
         else:
             raise Http404
+        destination = request.POST.get('next', '')
+        if destination.startswith(reverse('admin:index')) and url_has_allowed_host_and_scheme(
+                destination, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+            return redirect(destination)
         return redirect(reverse('admin:core_bookingrequest_change', args=[booking.pk]))
 
     @admin.action(description='Подтвердить выбранные брони', permissions=['change'])
@@ -529,7 +610,7 @@ class BookingRequestAdmin(EditorialAdminMixin, admin.ModelAdmin):
 
 
 @admin.register(AppointmentSlot)
-class AppointmentSlotAdmin(EditorialAdminMixin, admin.ModelAdmin):
+class AppointmentSlotAdmin(OwnerScheduleMixin, EditorialAdminMixin, admin.ModelAdmin):
     change_list_template = 'admin/core/appointmentslot/change_list.html'
     list_display = ('starts_at', 'service', 'duration_minutes', 'availability', 'reservation', 'is_demo', 'is_published', 'is_blocked')
     list_editable = ('is_published', 'is_blocked')
@@ -598,7 +679,7 @@ class AppointmentSlotAdmin(EditorialAdminMixin, admin.ModelAdmin):
                 form.add_error(None, 'Не удалось создать расписание: ' + '; '.join(exc.messages))
             else:
                 self.message_user(request, f'Создано окон: {count}. Уже существовавшие окна пропущены: {skipped}.')
-                return redirect(reverse('admin:core_appointmentslot_changelist'))
+                return redirect(self.calendar_url(monday(form.cleaned_data['start_date'])))
         return TemplateResponse(request, 'admin/core/appointmentslot/generate.html', {
             **self.admin_site.each_context(request), 'opts': self.model._meta,
             'title': 'Создать расписание на неделю', 'form': form, 'media': self.media + form.media,
